@@ -1,4 +1,4 @@
-package org.md2k.motionsenselib.device;
+package org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2;
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
  * All rights reserved.
@@ -31,71 +31,73 @@ import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.UUID;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 
-public class CharacteristicMagnetometerV2 extends Characteristics {
-    private static final UUID CHARACTERISTICS = UUID.fromString("DA39C924-1D81-48E2-9C68-D0AE4BBD351F");
+public class CharacteristicPPGFilteredDcNewV2 extends Characteristics {
+    private static final UUID CHARACTERISTICS = UUID.fromString("DA39C926-1D81-48E2-9C68-D0AE4BBD351F");
     private static final int MAX_SEQUENCE_NUMBER = 65536;
+
     private double frequency;
 
-    public CharacteristicMagnetometerV2(double frequency) {
+    public CharacteristicPPGFilteredDcNewV2(double frequency) {
         this.frequency = frequency;
     }
 
-
     @Override
     public Observable<Data> listen(RxBleConnection rxBleConnection) {
-        final long[] lastCorrectedTimestamp = {-1};
         final int[] lastSequenceNumber = {-1};
+        final long[] lastCorrectedTimestamp = {-1};
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
                 .flatMap((Function<byte[], Observable<Data>>) bytes -> {
                     long curTime = System.currentTimeMillis();
-                    ArrayList<Data> data = new ArrayList<>();
-                    double[] mag1 = getMagnetometer1(bytes);
-                    double[] mag2 = getMagnetometer2(bytes);
-                    double[] rawLast = getRaw(bytes);
+                    Data[] data = new Data[3];
                     int sequenceNumber = getSequenceNumber(bytes);
-                    double[] sequenceNumberLast = new double[]{sequenceNumber};
-                    long correctedTimestamp = correctTimeStamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], frequency / 2, MAX_SEQUENCE_NUMBER);
-                    long correctTimestamp2 = (long) (correctedTimestamp - (1000.0 / (frequency * 2.0)));
-                    data.add(new Data(SensorType.MAGNETOMETER, correctedTimestamp, mag1));
-                    data.add(new Data(SensorType.MAGNETOMETER, correctTimestamp2, mag2));
-                    data.add(new Data(SensorType.MAGNETOMETER_RAW, correctedTimestamp, rawLast));
-                    data.add(new Data(SensorType.MAGNETOMETER_SEQUENCE_NUMBER, correctedTimestamp, sequenceNumberLast));
+                    long correctedTimestamp = correctTimeStamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], frequency, MAX_SEQUENCE_NUMBER);
+                    data[0] = new Data(SensorType.PPG_DC, correctedTimestamp, getFilteredPPG(bytes));
+                    data[1] = new Data(SensorType.PPG_DC_RAW, curTime, getRaw(bytes));
+                    data[2] = new Data(SensorType.PPG_DC_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
                     lastCorrectedTimestamp[0] = correctedTimestamp;
                     lastSequenceNumber[0] = sequenceNumber;
-                    Data[] d = new Data[data.size()];
-                    data.toArray(d);
-                    return Observable.fromArray(d);
+                    return Observable.fromArray(data);
                 });
     }
 
-    private double[] getMagnetometer1(byte[] bytes) {
-        double[] sample = new double[3];
-        sample[0] = convertADCtoSI((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff));
-        sample[1] = convertADCtoSI((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff));
-        sample[2] = convertADCtoSI((short) ((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff));
+    /**
+     * Infra-red 1: bytes 17-14
+     * Infra-red 2: bytes 13-10
+     * Green/Red 1: bytes 9-6
+     * Green/Red 2: bytes 5-2
+     * Counter: bytes 1-0
+     */
+    private double[] getFilteredPPG(byte[] bytes) {
+        double[] sample = new double[4];
+        sample[0] = convertFilteredPPGValues(bytes[0], bytes[1], bytes[2], bytes[3]);
+        sample[1] = convertFilteredPPGValues(bytes[4], bytes[5], bytes[6], bytes[7]);
+        sample[2] = convertFilteredPPGValues(bytes[8], bytes[9], bytes[10], bytes[11]);
+        sample[3] = convertFilteredPPGValues(bytes[12], bytes[13], bytes[14], bytes[15]);
         return sample;
     }
 
-    private double[] getMagnetometer2(byte[] bytes) {
-        double[] sample = new double[3];
-        sample[0] = convertADCtoSI((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff));
-        sample[1] = convertADCtoSI((short) ((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff));
-        sample[2] = convertADCtoSI((short) ((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff));
-        return sample;
+
+    /**
+     * each ppg dc value is of type 32-bit single-precision float sent over the channels in an
+     * unsigned uInt8 array, floatCast of size 4. The format is little endian. So, for example, in
+     * Channel Infra-red floatCast[0] corresponds to the MSB and floatCast[3] is the LSB. The
+     * counter is also in little-endian form
+     */
+    private static double convertFilteredPPGValues(byte floatCast3, byte floatCast2, byte floatCast1, byte floatCast0) {
+        byte[] bytes=new byte[]{floatCast0, floatCast1, floatCast2, floatCast3};
+        return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
     }
 
-    private double convertADCtoSI(double mag) {
-        return mag * 0.15;
-    }
 
     private int getSequenceNumber(byte[] data) {
-        return ((data[12] & 0xff) << 8) | (data[13] & 0xff);
+        return ((data[data.length - 2] & 0xff) << 8) | (data[data.length - 1] & 0xff);
     }
 
     private double[] getRaw(byte[] bytes) {

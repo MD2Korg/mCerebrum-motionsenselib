@@ -1,18 +1,15 @@
-package org.md2k.motionsenselib.device.motion_sense_hrv_v2;
+package org.md2k.motionsenselib.device.motion_sense_hrv_2;
 
 import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleConnection;
 
-import org.md2k.motionsenselib.device.CharacteristicPPGFilteredDcOldV2;
-import org.md2k.motionsenselib.device.CharacteristicPPGFilteredOldV2;
-import org.md2k.motionsenselib.device.CharacteristicPpgOldV2;
 import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.DataQuality;
 import org.md2k.motionsenselib.device.DataQualityPPG;
 import org.md2k.motionsenselib.settings.DeviceSettings;
 import org.md2k.motionsenselib.device.SensorInfo;
 import org.md2k.motionsenselib.device.SensorType;
-import org.md2k.motionsenselib.device.motion_sense_v2.MotionSenseV2;
+import org.md2k.motionsenselib.device.motion_sense_2.MotionSenseV2;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

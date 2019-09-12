@@ -435,14 +435,9 @@ class DeviceSettings {
 
   setAccelerometerSampleRate(double sampleRate) {
     _accelerometerSampleRate = sampleRate;
+    _gyroscopeSampleRate = sampleRate;
     _sequenceNumberMotionSampleRate = sampleRate;
     _rawMotionSampleRate = sampleRate;
-    if (platformType == "MOTION_SENSE_HRV_PLUS") {
-      _quaternionSampleRate = sampleRate;
-      _ppgSampleRate = sampleRate;
-    } else {
-      _gyroscopeSampleRate = sampleRate;
-    }
   }
 
   void setPpgSampleRate(double value) {

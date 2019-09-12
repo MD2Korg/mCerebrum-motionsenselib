@@ -1,14 +1,13 @@
-package org.md2k.motionsenselib.device.motion_sense_hrv_plus_v2;
+package org.md2k.motionsenselib.device.motion_sense_hrv_plus_2;
 
 import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleConnection;
 
-import org.md2k.motionsenselib.device.CharacteristicMagnetometerV2;
 import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.settings.DeviceSettings;
 import org.md2k.motionsenselib.device.SensorInfo;
 import org.md2k.motionsenselib.device.SensorType;
-import org.md2k.motionsenselib.device.motion_sense_hrv_v2.MotionSenseHrvV2;
+import org.md2k.motionsenselib.device.motion_sense_hrv_2.MotionSenseHrvV2;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -64,7 +63,7 @@ public class MotionSenseHrvPlusV2 extends MotionSenseHrvV2 {
     protected ArrayList<Characteristics> createCharacteristics() {
         ArrayList<Characteristics> characteristics = super.createCharacteristics();
         if(deviceSettings.isMagnetometerEnable()|| deviceSettings.isRawMagnetometerEnable()|| deviceSettings.isSequenceNumberMagnetometerEnable()){
-            characteristics.add(new CharacteristicMagnetometerV2(deviceSettings.getRawMagnetometerSampleRate()));
+            characteristics.add(new CharacteristicMagnetometerV2Old(deviceSettings.getRawMagnetometerSampleRate()));
         }
 
         return characteristics;

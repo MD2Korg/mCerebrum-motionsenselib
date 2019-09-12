@@ -1,4 +1,4 @@
-package org.md2k.motionsenselib.device;
+package org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2;
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
  * All rights reserved.
@@ -31,18 +31,20 @@ import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.UUID;
 
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 
-public class CharacteristicPPGFilteredDcNewV2 extends Characteristics {
-    private static final UUID CHARACTERISTICS = UUID.fromString("DA39C926-1D81-48E2-9C68-D0AE4BBD351F");
-    private static final int MAX_SEQUENCE_NUMBER = 65536;
+public class CharacteristicPPGFilteredNewV2 extends Characteristics {
+    private static final UUID CHARACTERISTICS = UUID.fromString("DA39C925-1D81-48E2-9C68-D0AE4BBD351F");
+    private static final int MAX_SEQUENCE_NUMBER = 65535;
 
     private double frequency;
 
-    public CharacteristicPPGFilteredDcNewV2(double frequency) {
+    public CharacteristicPPGFilteredNewV2(double frequency) {
         this.frequency = frequency;
     }
 
@@ -56,22 +58,15 @@ public class CharacteristicPPGFilteredDcNewV2 extends Characteristics {
                     Data[] data = new Data[3];
                     int sequenceNumber = getSequenceNumber(bytes);
                     long correctedTimestamp = correctTimeStamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], frequency, MAX_SEQUENCE_NUMBER);
-                    data[0] = new Data(SensorType.PPG_DC, correctedTimestamp, getFilteredPPG(bytes));
-                    data[1] = new Data(SensorType.PPG_DC_RAW, curTime, getRaw(bytes));
-                    data[2] = new Data(SensorType.PPG_DC_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
+                        data[0] = new Data(SensorType.PPG_FILTERED, correctedTimestamp, getFilteredPPG(bytes));
+                    data[1] = new Data(SensorType.PPG_RAW, curTime, getRaw(bytes));
+                    data[2] = new Data(SensorType.PPG_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
                     lastCorrectedTimestamp[0] = correctedTimestamp;
                     lastSequenceNumber[0] = sequenceNumber;
                     return Observable.fromArray(data);
                 });
     }
 
-    /**
-     * Infra-red 1: bytes 17-14
-     * Infra-red 2: bytes 13-10
-     * Green/Red 1: bytes 9-6
-     * Green/Red 2: bytes 5-2
-     * Counter: bytes 1-0
-     */
     private double[] getFilteredPPG(byte[] bytes) {
         double[] sample = new double[4];
         sample[0] = convertFilteredPPGValues(bytes[0], bytes[1], bytes[2], bytes[3]);
@@ -89,8 +84,8 @@ public class CharacteristicPPGFilteredDcNewV2 extends Characteristics {
      * counter is also in little-endian form
      */
     private static double convertFilteredPPGValues(byte floatCast3, byte floatCast2, byte floatCast1, byte floatCast0) {
-
-        return (double) (floatCast0 << 24 | floatCast1 << 16 | floatCast2 << 8 | floatCast3); //TODO: This needs testing.
+        byte[] bytes=new byte[]{floatCast0, floatCast1, floatCast2, floatCast3};
+        return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
     }
 
 

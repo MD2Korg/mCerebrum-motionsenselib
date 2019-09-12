@@ -1,19 +1,15 @@
-package org.md2k.motionsenselib.device.motion_sense_hrv_plus_v2_gen2;
+package org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2;
 
 import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleConnection;
 
-import org.md2k.motionsenselib.device.CharacteristicMagnetometerV2;
-import org.md2k.motionsenselib.device.CharacteristicPPGFilteredDcNewV2;
-import org.md2k.motionsenselib.device.CharacteristicPPGFilteredNewV2;
-import org.md2k.motionsenselib.device.CharacteristicPpgNewV2;
 import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.DataQuality;
 import org.md2k.motionsenselib.device.DataQualityAccelerometer;
 import org.md2k.motionsenselib.device.DataQualityPPG;
 import org.md2k.motionsenselib.device.SensorInfo;
 import org.md2k.motionsenselib.device.SensorType;
-import org.md2k.motionsenselib.device.motion_sense_v2.MotionSenseV2;
+import org.md2k.motionsenselib.device.motion_sense_2.MotionSenseV2;
 import org.md2k.motionsenselib.settings.DeviceSettings;
 
 import java.util.ArrayList;
@@ -107,7 +103,7 @@ public class MotionSenseHrvPlusGen2 extends MotionSenseV2 {
             characteristics.add(new CharacteristicPpgNewV2(deviceSettings.getRawPpgSampleRate()));
         }
         if(deviceSettings.isMagnetometerEnable()|| deviceSettings.isRawMagnetometerEnable()|| deviceSettings.isSequenceNumberMagnetometerEnable()){
-            characteristics.add(new CharacteristicMagnetometerV2(deviceSettings.getRawMagnetometerSampleRate()));
+            characteristics.add(new CharacteristicMagnetometerV2New(deviceSettings.getRawMagnetometerSampleRate()));
         }
 
         return characteristics;

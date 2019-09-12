@@ -1,4 +1,4 @@
-package org.md2k.motionsenselib.device.motion_sense_hrv_plus_v2_gen2;
+package org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2;
 
 
 import com.polidea.rxandroidble2.RxBleConnection;

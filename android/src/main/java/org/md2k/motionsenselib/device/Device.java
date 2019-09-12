@@ -12,11 +12,11 @@ import org.md2k.motionsenselib.MSConstants;
 import org.md2k.motionsenselib.device.motion_sense.MotionSense;
 import org.md2k.motionsenselib.device.motion_sense_hrv.MotionSenseHrv;
 import org.md2k.motionsenselib.device.motion_sense_hrv_plus.MotionSenseHrvPlus;
-import org.md2k.motionsenselib.device.motion_sense_hrv_plus_v2.MotionSenseHrvPlusV2;
-import org.md2k.motionsenselib.device.motion_sense_hrv_plus_v2_gen2.MotionSenseHrvPlusGen2;
-import org.md2k.motionsenselib.device.motion_sense_hrv_plus_v2_gen2.MotionSenseHrvPlusGen2IR;
-import org.md2k.motionsenselib.device.motion_sense_hrv_v2.MotionSenseHrvV2;
-import org.md2k.motionsenselib.device.motion_sense_v2.MotionSenseV2;
+import org.md2k.motionsenselib.device.motion_sense_hrv_plus_2.MotionSenseHrvPlusV2;
+import org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2.MotionSenseHrvPlusGen2;
+import org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2.MotionSenseHrvPlusGen2IR;
+import org.md2k.motionsenselib.device.motion_sense_hrv_2.MotionSenseHrvV2;
+import org.md2k.motionsenselib.device.motion_sense_2.MotionSenseV2;
 import org.md2k.motionsenselib.settings.DeviceSettings;
 
 import java.util.ArrayList;

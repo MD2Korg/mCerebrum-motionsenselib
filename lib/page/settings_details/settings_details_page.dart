@@ -318,7 +318,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                 ),
               )
             : Container(),
-        deviceSettings.isVersion2() && !deviceSettings.isMotionSense()
+        deviceSettings.isVersion2() && !deviceSettings.isMotionSense() && !deviceSettings.isMotionSenseHRVPlusGen2()
             ? ListTile(
                 dense: true,
                 title: Text(

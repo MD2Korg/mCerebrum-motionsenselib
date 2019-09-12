@@ -1,6 +1,10 @@
-package org.md2k.motionsenselib.device;
+package org.md2k.motionsenselib.device.motion_sense_2;
 
 import com.polidea.rxandroidble2.RxBleConnection;
+
+import org.md2k.motionsenselib.device.Characteristics;
+import org.md2k.motionsenselib.device.Data;
+import org.md2k.motionsenselib.device.SensorType;
 
 import java.util.UUID;
 

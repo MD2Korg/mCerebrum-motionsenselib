@@ -1,4 +1,4 @@
-package org.md2k.motionsenselib.device;
+package org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2;
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
  * All rights reserved.
@@ -36,13 +36,11 @@ import java.util.UUID;
 import io.reactivex.Observable;
 import io.reactivex.functions.Function;
 
-public class CharacteristicPPGFilteredOldV2 extends Characteristics {
+public class CharacteristicPpgNewV2 extends Characteristics {
     private static final UUID CHARACTERISTICS = UUID.fromString("DA39C925-1D81-48E2-9C68-D0AE4BBD351F");
     private static final int MAX_SEQUENCE_NUMBER = 65535;
-
     private double frequency;
-
-    public CharacteristicPPGFilteredOldV2(double frequency) {
+    public CharacteristicPpgNewV2(double frequency) {
         this.frequency = frequency;
     }
 
@@ -56,7 +54,7 @@ public class CharacteristicPPGFilteredOldV2 extends Characteristics {
                     Data[] data = new Data[3];
                     int sequenceNumber = getSequenceNumber(bytes);
                     long correctedTimestamp = correctTimeStamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], frequency, MAX_SEQUENCE_NUMBER);
-                        data[0] = new Data(SensorType.PPG_FILTERED, correctedTimestamp, getFilteredPPG(bytes));
+                    data[0] = new Data(SensorType.PPG, correctedTimestamp, getPPG(bytes));
                     data[1] = new Data(SensorType.PPG_RAW, curTime, getRaw(bytes));
                     data[2] = new Data(SensorType.PPG_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
                     lastCorrectedTimestamp[0] = correctedTimestamp;
@@ -66,33 +64,27 @@ public class CharacteristicPPGFilteredOldV2 extends Characteristics {
     }
 
     /**
-     * Infra-red 1: bytes 17-14
-     * Infra-red 2: bytes 13-10
-     * Green/Red 1: bytes 9-6
-     * Green/Red 2: bytes 5-2
+     * Infra-red 1: bytes 13-11
+     * Infra-red 2: bytes 10-8
+     * Green/Red 1: bytes 7-5
+     * Green/Red 2: bytes 4-2
      * Counter: bytes 1-0
      */
-    private double[] getFilteredPPG(byte[] bytes) {
-        double[] sample = new double[4];
-        sample[0] = convertFilteredPPGValues(bytes[0], bytes[1], bytes[2], bytes[3]);
-        sample[1] = convertFilteredPPGValues(bytes[4], bytes[5], bytes[6], bytes[7]);
-        sample[2] = convertFilteredPPGValues(bytes[8], bytes[9], bytes[10], bytes[11]);
-        sample[3] = convertFilteredPPGValues(bytes[12], bytes[13], bytes[14], bytes[15]);
-        return sample;
-    }
-
-
     /**
      * each ppg dc value is of type 32-bit single-precision float sent over the channels in an
      * unsigned uInt8 array, floatCast of size 4. The format is little endian. So, for example, in
      * Channel Infra-red floatCast[0] corresponds to the MSB and floatCast[3] is the LSB. The
      * counter is also in little-endian form
      */
-    private static double convertFilteredPPGValues(byte floatCast3, byte floatCast2, byte floatCast1, byte floatCast0) {
 
-        return (double) (floatCast0 << 24 | floatCast1 << 16 | floatCast2 << 8 | floatCast3); //TODO: This needs testing.
+    private double[] getPPG(byte[] bytes) {
+        double[] sample = new double[4];
+        sample[0] = ((bytes[0] & 0xff)<<11) | ((bytes[1] & 0xff) <<3) | ((bytes[2] & 0xe0)>>5);
+        sample[1] = ((bytes[2] & 0x1f)<<14) | ((bytes[3] & 0xff) <<6) | ((bytes[4] & 0xf8)>>3);
+        sample[2] = ((bytes[4] & 0x02)<<17) | ((bytes[5] & 0xff) <<9) | ((bytes[6] & 0xff)<<1) | ((bytes[7] & 0x80)>>1);
+        sample[3] = ((bytes[7] & 0x7f)<<12) | ((bytes[8] & 0xff) <<4) | ((bytes[9] & 0xf0)>>4);
+        return sample;
     }
-
 
     private int getSequenceNumber(byte[] data) {
         return ((data[data.length - 2] & 0xff) << 8) | (data[data.length - 1] & 0xff);

@@ -1,4 +1,4 @@
-package org.md2k.motionsenselib.device.motion_sense_hrv_plus_v2;
+package org.md2k.motionsenselib.device.motion_sense_2;
 
 
 import com.polidea.rxandroidble2.RxBleConnection;
@@ -37,19 +37,14 @@ import io.reactivex.functions.Function;
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-class CharacteristicConfigV2MotionSenseHrvPlus extends CharacteristicConfigV2 {
+class CharacteristicConfigV2MotionSense extends CharacteristicConfigV2 {
 
     @Override
     protected Observable<RxBleConnection> setConfiguration(final RxBleConnection rxBleConnection, final DeviceSettings deviceSettings) {
-        return setSensorEnableObservable(rxBleConnection, deviceSettings.isAccelerometerEnable(), deviceSettings.isGyroscopeEnable(), deviceSettings.isMagnetometerEnable(), deviceSettings.isPpgEnable())
+        return setSensorEnableObservable(rxBleConnection, deviceSettings.isAccelerometerEnable(), deviceSettings.isGyroscopeEnable(), false, false)
                 .flatMap((Function<byte[], Single<byte[]>>) bytes -> {
-                    if (deviceSettings.isPpgEnable())
-                        return setPPGObservable(rxBleConnection, deviceSettings.getPpgRed(), deviceSettings.getPpgGreen(), deviceSettings.getPpgInfrared());
-                    else return Single.just(new byte[0]);
-                })
-                .flatMap((Function<byte[], Single<byte[]>>) bytes -> {
-                    if (deviceSettings.isPpgEnable() || deviceSettings.isAccelerometerEnable() || deviceSettings.isGyroscopeEnable())
-                        return setSamplingRateObservable(rxBleConnection, deviceSettings.getRawMotionSampleRate(), deviceSettings.getRawPpgSampleRate());
+                    if (deviceSettings.isAccelerometerEnable() || deviceSettings.isGyroscopeEnable())
+                        return setSamplingRateObservable(rxBleConnection, deviceSettings.getRawMotionSampleRate(), 0);
                     else return Single.just(new byte[0]);
                 })
                 .flatMap((Function<byte[], Single<byte[]>>) bytes -> {
@@ -57,10 +52,6 @@ class CharacteristicConfigV2MotionSenseHrvPlus extends CharacteristicConfigV2 {
                         return setSensitivityObservable(rxBleConnection, deviceSettings.getAccelerometerSensitivity(),deviceSettings.getGyroscopeSensitivity());
                     else return Single.just(new byte[0]);
                 })
-                .flatMap((Function<byte[], Single<byte[]>>) bytes -> {
-                    if (deviceSettings.isPpgEnable())
-                        return setPPGFilterObservable(rxBleConnection, deviceSettings.isPpgFilterEnable());
-                    else return Single.just(new byte[0]);
-                }).flatMap((Function<byte[], Single<byte[]>>) bytes -> setMinimumConnectionInterval(rxBleConnection, deviceSettings.getMinConnectionInterval())).flatMapObservable((Function<byte[], ObservableSource<RxBleConnection>>) bytes -> Observable.just(rxBleConnection));
+                .flatMap((Function<byte[], Single<byte[]>>) bytes -> setMinimumConnectionInterval(rxBleConnection, deviceSettings.getMinConnectionInterval())).flatMapObservable((Function<byte[], ObservableSource<RxBleConnection>>) bytes -> Observable.just(rxBleConnection));
     }
 }

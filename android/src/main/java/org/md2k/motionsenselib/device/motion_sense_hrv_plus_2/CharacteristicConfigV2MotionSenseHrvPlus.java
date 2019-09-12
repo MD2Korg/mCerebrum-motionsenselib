@@ -1,4 +1,4 @@
-package org.md2k.motionsenselib.device.motion_sense_hrv_v2;
+package org.md2k.motionsenselib.device.motion_sense_hrv_plus_2;
 
 
 import com.polidea.rxandroidble2.RxBleConnection;
@@ -37,11 +37,11 @@ import io.reactivex.functions.Function;
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-class CharacteristicConfigV2MotionSenseHRV extends CharacteristicConfigV2 {
+class CharacteristicConfigV2MotionSenseHrvPlus extends CharacteristicConfigV2 {
 
     @Override
     protected Observable<RxBleConnection> setConfiguration(final RxBleConnection rxBleConnection, final DeviceSettings deviceSettings) {
-        return setSensorEnableObservable(rxBleConnection, deviceSettings.isAccelerometerEnable(), deviceSettings.isGyroscopeEnable(), false, deviceSettings.isPpgEnable())
+        return setSensorEnableObservable(rxBleConnection, deviceSettings.isAccelerometerEnable(), deviceSettings.isGyroscopeEnable(), deviceSettings.isMagnetometerEnable(), deviceSettings.isPpgEnable())
                 .flatMap((Function<byte[], Single<byte[]>>) bytes -> {
                     if (deviceSettings.isPpgEnable())
                         return setPPGObservable(rxBleConnection, deviceSettings.getPpgRed(), deviceSettings.getPpgGreen(), deviceSettings.getPpgInfrared());

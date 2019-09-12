@@ -1,10 +1,9 @@
-package org.md2k.motionsenselib.device.motion_sense_v2;
+package org.md2k.motionsenselib.device.motion_sense_2;
 
 import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleConnection;
 
 import org.md2k.motionsenselib.device.CharacteristicBatteryV1V2;
-import org.md2k.motionsenselib.device.CharacteristicMotionV2;
 import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.DataQuality;
 import org.md2k.motionsenselib.device.DataQualityAccelerometer;
