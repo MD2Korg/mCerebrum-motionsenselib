@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+  package="org.md2k.motionsenselib">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <application>
+        <activity
+            android:name="org.md2k.motionsenselib.plot.ActivityPlot"
+            android:enabled="true"
+            android:exported="true" />
+    </application>
+
+</manifest>
