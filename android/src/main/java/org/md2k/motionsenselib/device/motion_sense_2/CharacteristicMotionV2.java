@@ -55,16 +55,14 @@ public class CharacteristicMotionV2 extends Characteristics {
     public Observable<Data> listen(RxBleConnection rxBleConnection) {
         final int[] lastSequenceNumber = {-1};
         final long[] lastCorrectedTimestamp = {-1};
-        final double scaleFactorAcl = getScalingFactorAcl(accelerometerSensitivity);
-        final double scaleFactorGyro = getScalingFactorGyro(gyroscopeSensitivity);
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
                 .flatMap((Function<byte[], Observable<Data>>) bytes -> {
                     long curTime = System.currentTimeMillis();
                     Data[] data = new Data[4];
                     int sequenceNumber = getSequenceNumber(bytes);
                     long correctTimeStamp = correctTimeStamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], frequency, MAX_SEQUENCE_NUMBER);
-                    data[0] = new Data(SensorType.ACCELEROMETER, correctTimeStamp, getAccelerometer(bytes, scaleFactorAcl));
-                    data[1] = new Data(SensorType.GYROSCOPE, correctTimeStamp, getGyroscope(bytes, scaleFactorGyro));
+                    data[0] = new Data(SensorType.ACCELEROMETER, correctTimeStamp, getAccelerometer(bytes, accelerometerSensitivity));
+                    data[1] = new Data(SensorType.GYROSCOPE, correctTimeStamp, getGyroscope(bytes, gyroscopeSensitivity));
                     data[2] = new Data(SensorType.MOTION_RAW, curTime, getRaw(bytes));
                     data[3] = new Data(SensorType.MOTION_SEQUENCE_NUMBER, correctTimeStamp, new double[]{sequenceNumber});
                     lastCorrectedTimestamp[0] = correctTimeStamp;
@@ -73,55 +71,22 @@ public class CharacteristicMotionV2 extends Characteristics {
                 });
     }
 
-    private double getScalingFactorAcl(int sensitivityAcl) {
-        double value=16384;
-        switch (sensitivityAcl) {
-            case 2:
-                value= 16384;break;
-            case 4:
-                value= 8192;break;
-            case 8:
-                value= 4096;break;
-            case 16:
-                value= 2048;break;
-        }
-        return value;
-    }
 
-    private double getScalingFactorGyro(int sensitivityGyro) {
-        double value = 131;
-        switch (sensitivityGyro) {
-            case 250:
-                value= 131;break;
-            case 500:
-                value= 65.5;break;
-            case 1000:
-                value= 32.8;break;
-            case 2000:
-                value= 16.4;break;
-        }
-        return value;
-    }
-
-    private double[] getAccelerometer(byte[] bytes, double scalingFactor) {
+    private double[] getAccelerometer(byte[] bytes, double acl_sensitivity) {
         double[] sample = new double[3];
-        sample[0] = convertADCtoSI((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff), scalingFactor);
-        sample[1] = convertADCtoSI((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff), scalingFactor);
-        sample[2] = convertADCtoSI((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff), scalingFactor);
+        sample[0] = ((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff))*acl_sensitivity/32768.0;
+        sample[1] = ((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff))*acl_sensitivity/32768.0;
+        sample[2] = ((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff))*acl_sensitivity/32768.0;
         return sample;
     }
 
 
-    private double[] getGyroscope(byte[] bytes, double scalingFactor) {
+    private double[] getGyroscope(byte[] bytes, double gyro_sensitivity) {
         double[] sample = new double[3];
-        sample[0] = convertADCtoSI((short) ((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff), scalingFactor);
-        sample[1] = convertADCtoSI((short) ((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff), scalingFactor);
-        sample[2] = convertADCtoSI((short) ((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff), scalingFactor);
+        sample[0] = ((short) ((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff))*gyro_sensitivity/32768.0;
+        sample[1] = ((short) ((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff))*gyro_sensitivity/32768.0;
+        sample[2] = ((short) ((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff))*gyro_sensitivity/32768.0;
         return sample;
-    }
-
-    private static double convertADCtoSI(double x, double scalingFactor) {
-        return x / scalingFactor;
     }
 
 

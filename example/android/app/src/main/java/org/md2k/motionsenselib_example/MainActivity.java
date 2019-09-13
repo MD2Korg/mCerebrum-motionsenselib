@@ -154,7 +154,7 @@ public class MainActivity extends FlutterActivity {
                     synchronized (results) {
                         if (results.size() > 100) {
                             try {
-                                Log.e("abc", "writing");
+                                Log.d("abc", "writing");
                                 if (files.get(d.getDeviceSettings().getDeviceId()) == null) {
                                     File newFile = new File(privateDir, filename);
                                     FileWriter fw = new FileWriter(newFile);

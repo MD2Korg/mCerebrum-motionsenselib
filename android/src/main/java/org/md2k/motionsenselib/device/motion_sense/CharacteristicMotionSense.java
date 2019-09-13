@@ -68,39 +68,31 @@ class CharacteristicMotionSense extends Characteristics {
 
     private double[] getAccelerometer(byte[] bytes) {
         double[] sample = new double[3];
-        sample[0] = convertToAcl((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff));
-        sample[1] = convertToAcl((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff));
-        sample[2] = convertToAcl((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff));
+        sample[0] = 2.0*((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff))/16384.0;
+        sample[1] = 2.0*((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff))/16384.0;
+        sample[2] = 2.0*((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff))/16384.0;
         return sample;
     }
 
 
     private double[] getGyroscope1(byte[] bytes) {
         double[] sample = new double[3];
-        sample[0] = convertToGyro((short) ((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff));
-        sample[1] = convertToGyro((short) ((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff));
-        sample[2] = convertToGyro((short) ((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff));
+        sample[0] = 500.0*((short) ((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff))/32768.0;
+        sample[1] = 500.0*((short) ((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff))/32768.0;
+        sample[2] = 500.0*((short) ((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff))/32768.0;
         return sample;
     }
 
     private double[] getGyroscope2(byte[] bytes) {
         double[] sample = new double[3];
-        sample[0] = convertToGyro((short) ((bytes[12] & 0xff) << 8) | (bytes[13] & 0xff));
-        sample[1] = convertToGyro((short) ((bytes[14] & 0xff) << 8) | (bytes[15] & 0xff));
-        sample[2] = convertToGyro((short) ((bytes[16] & 0xff) << 8) | (bytes[17] & 0xff));
+        sample[0] = 500.0*((short) ((bytes[12] & 0xff) << 8) | (bytes[13] & 0xff))/32768.0;
+        sample[1] = 500.0*((short) ((bytes[14] & 0xff) << 8) | (bytes[15] & 0xff))/32768.0;
+        sample[2] = 500.0*((short) ((bytes[16] & 0xff) << 8) | (bytes[17] & 0xff))/32768.0;
         return sample;
     }
 
-    private static double convertToAcl(double x) {
-        return 2.0 * x / 16384;
-    }
-
-    private static double convertToGyro(double x) {
-        return 500.0 * x / 32768;
-    }
-
     private int getSequenceNumber(byte[] data) {
-        return ((data[18] & 0xff) << 8) | (data[19] & 0xff);
+        return ((data[data.length-2] & 0xff) << 8) | (data[data.length-1] & 0xff);
     }
 
 

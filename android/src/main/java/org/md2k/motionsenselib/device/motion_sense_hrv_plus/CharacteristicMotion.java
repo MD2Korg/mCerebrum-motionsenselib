@@ -68,26 +68,21 @@ class CharacteristicMotion extends Characteristics {
 
     private double[] getAccelerometer(byte[] bytes) {
         double[] sample = new double[3];
-        sample[0] = convertAccelADCtoSI((short)((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff));
-        sample[1] = convertAccelADCtoSI((short)((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff));
-        sample[2] = convertAccelADCtoSI((short)((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff));
+        sample[0] = ((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff))*4.0/32768.0;
+        sample[1] = ((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff))*4.0/32768.0;
+        sample[2] = ((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff))*4.0/32768.0;
         return sample;
-    }
-    private double convertQuaternionToSI(double x){
-        return (2.0*x)/(65535.0) - 1;
     }
     private double[] getQuaternion(byte[] bytes) {
         double[] sample = new double[3];
-        sample[0] = convertQuaternionToSI((bytes[6] & 0xff) << 8 | (bytes[7] & 0xff));
-        sample[1] = convertQuaternionToSI((bytes[8] & 0xff) << 8 | (bytes[9] & 0xff));
-        sample[2] = convertQuaternionToSI((bytes[10] &0xff) << 8 | (bytes[11] & 0xff));
+        sample[0] = ((bytes[6] & 0xff) << 8 | (bytes[7] & 0xff))*2.0/65535.0-1;
+        sample[1] = ((bytes[8] & 0xff) << 8 | (bytes[9] & 0xff))*2.0/65535.0-1;
+        sample[2] = ((bytes[10] &0xff) << 8 | (bytes[11] & 0xff))*2.0/65535.0-1;
         return sample;
     }
 
     private int getSequenceNumber(byte[] data) {
-        int y = (data[18] & 0x03);
-        int x = (data[19] & 0xff);
-        return (y << 8) | x;
+        return ((data[18] & 0x03) << 8) | (data[19] & 0xff);
     }
 
     private double[] getPPG(byte[] bytes) {
@@ -96,10 +91,6 @@ class CharacteristicMotion extends Characteristics {
         sample[1] = ((bytes[14] & 0x3f)<<12) | ((bytes[15] & 0xff) <<4) | ((bytes[16] & 0xf0)>>4);
         sample[2] = ((bytes[16] & 0x0f)<<14) | ((bytes[17] & 0xff) <<6) | ((bytes[18] & 0xfc)>>2);
         return sample;
-    }
-
-    private  double convertAccelADCtoSI(double x) {
-        return 2.0 * x / 16384;
     }
 
     private double[] getRaw(byte[] bytes) {

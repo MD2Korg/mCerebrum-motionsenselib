@@ -55,8 +55,5 @@ Characteristics (read/write): `da39d650-1d81-48e2-9c68-d0ae4bbd351f`
 |MotionSenseHRV+|0x0F|0x3E|0x68 (X)|0x14|5|0x28|0x01|0x01|0x0A|0|
 |MotionSenseHRV+ Gen2|0x0F|0x3E|0x68 (X)|0x14|5|0x28|0x01|0x01|0x0A|0|
 
-## MotionSenseHRV+Gen2
-### (Accelerometer & Gyroscope)
-|Device|Characteristics|Size (in bytes)|Acl X|Acl Y|Acl Z|
-|---|---|---|---|---|---|
-|   |`DA39C921-1D81-48E2-9C68-D0AE4BBD351F`|14|01<br> (2's complement form)|
+## Packet Format
+[Click to get the packet format](https://docs.google.com/spreadsheets/d/e/2PACX-1vQZSFddzWZ814mPiGW7a2rSyYnR7zAWm_MlbW0UbOWpll03vRIxJydTGiPesoy6FRHQRHP01AHvnY5J/pubhtml)

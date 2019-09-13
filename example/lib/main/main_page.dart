@@ -51,6 +51,7 @@ class _MainPageState extends State<MainPage> {
     if (summary.isRunning()) {
       _timer = new Timer.periodic(const Duration(seconds: 1), (timer) {
         MotionSense.getSummary().then((onValue) {
+          summary = onValue;
           setState(() {});
         });
       });
@@ -78,7 +79,6 @@ class _MainPageState extends State<MainPage> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ListTile(
-//                  leading: Icon(Icons.play_circle_filled),
                 title: Text(
                   "Data Collection",
                   style: TextStyle(fontSize: 16),
@@ -95,7 +95,9 @@ class _MainPageState extends State<MainPage> {
                         onPressed: () async{
                           await MotionsenselibExample.saveDataStart();
                           await MotionSense.setBackgroundService(true);
+                          summary = await MotionSense.getSummary();
                           startTimerIfRequired();
+                          setState(() {});
                         },
                         child: Icon(
                           Icons.play_circle_outline,
@@ -109,7 +111,7 @@ class _MainPageState extends State<MainPage> {
                         textColor: Colors.red,
                         onPressed: () async {
                           await MotionSense.setBackgroundService(false);
-                          await MotionsenselibExample.saveDataStart();
+                          await MotionsenselibExample.saveDataStop();
                           stopTimer();
                           summary = await MotionSense.getSummary();
                           setState(() {});

@@ -71,28 +71,15 @@ public class CharacteristicPpgOldV2 extends Characteristics {
      * Counter: bytes 1-0
      */
     private double[] getPPG(byte[] bytes) {
-        double[] sample = new double[4];
-        sample[0] = convertPPGValues(bytes[0], bytes[1], bytes[2]);
-        sample[1] = convertPPGValues(bytes[3], bytes[4], bytes[5]);
-        sample[2] = convertPPGValues(bytes[6], bytes[7], bytes[8]);
-        sample[3] = convertPPGValues(bytes[9], bytes[10], bytes[11]);
+        double[] sample = new double[3];
+        sample[0] = ((bytes[0] & 0xff)<<10) | ((bytes[1] & 0xff) <<2) | ((bytes[2] & 0xc0)>>6);
+        sample[1] = ((bytes[2] & 0x3f)<<12) | ((bytes[3] & 0xff) <<4) | ((bytes[4] & 0xf0)>>4);
+        sample[2] = ((bytes[4] & 0x0f)<<14) | ((bytes[6] & 0xff) <<6) | ((bytes[6] & 0xfc)>>2);
         return sample;
     }
 
-    /**
-     * each ppg dc value is of type 32-bit single-precision float sent over the channels in an
-     * unsigned uInt8 array, floatCast of size 4. The format is little endian. So, for example, in
-     * Channel Infra-red floatCast[0] corresponds to the MSB and floatCast[3] is the LSB. The
-     * counter is also in little-endian form
-     */
-    private static int convertPPGValues(byte intCast2, byte intCast1, byte intCast0) {
-        return (intCast2 << 16 | intCast1 << 8 | intCast0);
-        //TODO: This needs testing.
-    }
-
-
     private int getSequenceNumber(byte[] data) {
-        return ((data[12] & 0xff) << 8) | (data[13] & 0xff);
+        return ((data[data.length - 2] & 0xff) << 8) | (data[data.length - 1] & 0xff);
     }
 
     private double[] getRaw(byte[] bytes) {

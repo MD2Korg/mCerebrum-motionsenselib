@@ -25,6 +25,8 @@ package org.md2k.motionsenselib.device.motion_sense_hrv_plus;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import android.util.Log;
+
 import com.polidea.rxandroidble2.RxBleConnection;
 
 import org.md2k.motionsenselib.device.Characteristics;
@@ -69,20 +71,28 @@ class CharacteristicMagnetometer extends Characteristics {
     private double[] getMagnetometer1(byte[] bytes) {
         double[] sample = new double[3];
         double[] sensitivity = getSensitivity(bytes);
-        sample[0] = convertADCtoSI((short)((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff), sensitivity[0]);
-        sample[1] = convertADCtoSI((short)((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff), sensitivity[1]);
-        sample[2] = convertADCtoSI((short)((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff), sensitivity[2]);
+        double sen_x = sensitivity[0];
+        double sen_y = sensitivity[1];
+        double sen_z = sensitivity[2];
+        sample[0] = ((short)((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff))*((sen_x-128)*.5/128.0+1);
+        sample[1] = ((short)((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff))*((sen_y-128)*.5/128.0+1);
+        sample[2] = ((short)((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff))*((sen_z-128)*.5/128.0+1);
+        Log.d("abc", ""+sample[0]+" "+sample[1]+" "+sample[2]);
         return sample;
     }
 
     private double[] getMagnetometer2(byte[] bytes) {
         double[] sample = new double[3];
         double[] sensitivity = getSensitivity(bytes);
-        sample[0] = convertADCtoSI((short)((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff), sensitivity[0]);
-        sample[1] = convertADCtoSI((short)((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff), sensitivity[1]);
-        sample[2] = convertADCtoSI((short)((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff), sensitivity[2]);
+        double sen_x = sensitivity[0];
+        double sen_y = sensitivity[1];
+        double sen_z = sensitivity[2];
+        sample[0] = ((short)((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff))*((sen_x-128)*.5/128.0+1);
+        sample[1] = ((short)((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff))*((sen_y-128)*.5/128.0+1);
+        sample[2] = ((short)((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff))*((sen_z-128)*.5/128.0+1);
         return sample;
     }
+
     private double convertADCtoSI(double mag, double sensitivity){
         return mag*((sensitivity-128)*.5/128.0+1);
     }
@@ -96,9 +106,7 @@ class CharacteristicMagnetometer extends Characteristics {
     }
 
     private int getSequenceNumber(byte[] data) {
-        int y=(data[15] & 0x03);
-        int x=(data[16] & 0xff);
-        return (y<<8)| x;
+        return ((data[18] & 0x03) << 8) | (data[19] & 0xff);
     }
     private double[] getRaw(byte[] bytes) {
         double[] sample = new double[bytes.length];

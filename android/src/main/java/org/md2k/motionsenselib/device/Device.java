@@ -192,7 +192,7 @@ public abstract class Device {
             sensorInfo.setCount(sensorInfo.getCount() + 1);
             sensorInfo.setLastSample(data.getSample());
             sensorInfo.setLastSampleTime(data.getTimestamp());
-            if(sensorInfo.getStartSampleTime()==0) sensorInfo.setStartSampleTime(data.getTimestamp());
+            if(sensorInfo.getStartSampleTime()<=0) sensorInfo.setStartSampleTime(data.getTimestamp());
             else
             if(MSConstants.DEBUG) Log.d("info",sensorInfo.getSensorType()+" "+(double)(sensorInfo.getCount())*1000.0/(sensorInfo.getLastSampleTime()-sensorInfo.getStartSampleTime()));
         }
