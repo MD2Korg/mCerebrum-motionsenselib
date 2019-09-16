@@ -1,4 +1,4 @@
-package org.md2k.motionsenselib.device;
+package org.md2k.motionsenselib.device.v2;
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
  * All rights reserved.
@@ -28,24 +28,22 @@ package org.md2k.motionsenselib.device;
 
 import com.polidea.rxandroidble2.RxBleConnection;
 
+import org.md2k.motionsenselib.device.Characteristics;
+import org.md2k.motionsenselib.device.Data;
+
 import java.util.UUID;
 
 import io.reactivex.Observable;
 
-public abstract class Characteristics {
-    protected Observable<byte[]> getCharacteristicListener(RxBleConnection rxBleConnection, UUID uuid) {
-        return rxBleConnection.setupNotification(uuid)
-                .flatMap(notificationObservable -> notificationObservable)
-                .map(bytes -> bytes);
+public abstract class CharacteristicsV2 extends Characteristics {
+    protected long correctTimeStamp(int curSequence, int lastSequenceNumber, long curTimestamp, long lastTimestamp) {
+        if (lastSequenceNumber == -1)
+            return curTimestamp;
+
+        int diff = (curSequence - lastSequenceNumber + 65536) % 65536;
+        long predictedTimestamp = diff*4+lastTimestamp;
+        if (curTimestamp < predictedTimestamp || curTimestamp - predictedTimestamp > 1000)
+            predictedTimestamp = curTimestamp;
+        return predictedTimestamp;
     }
-
-    public abstract Observable<Data> listen(RxBleConnection rxBleConnection);
-
-    protected double[] getRaw(byte[] bytes) {
-        double[] sample = new double[bytes.length];
-        for (int i = 0; i < bytes.length; i++)
-            sample[i] = bytes[i];
-        return sample;
-    }
-
 }

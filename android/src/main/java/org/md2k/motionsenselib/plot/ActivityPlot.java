@@ -26,9 +26,9 @@ public class ActivityPlot extends RealtimeLineChartActivity {
             device = MotionSenseManager.getDevice(deviceId);
             assert device != null;
             sensorInfo = device.getSensorInfo(sensorType);
-            YAxis leftAxis = mChart.getAxisLeft();
-            leftAxis.setAxisMinimum(sensorInfo.getMinValue());
-            leftAxis.setAxisMaximum(sensorInfo.getMaxValue());
+//            YAxis leftAxis = mChart.getAxisLeft();
+//            leftAxis.setAxisMinimum(sensorInfo.getMinValue());
+//            leftAxis.setAxisMaximum(sensorInfo.getMaxValue());
         } catch (Exception e) {
             finish();
         }

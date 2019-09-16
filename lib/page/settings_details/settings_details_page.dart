@@ -119,6 +119,13 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
       ),
     );
   }
+  String _getMotionSensorText(){
+    switch(deviceSettings.platformType){
+      case "MOTION_SENSE_HRV": return "Acl/Gyro/PPG Sampling Rate";
+      case "MOTION_SENSE_HRV_PLUS": return "Acl/Quaternion/PPG Sampling Rate";
+      default: return "Accelerometer/Gyroscope Sampling Rate";
+    }
+  }
 
   Widget createAclGyroWidget() {
     return Column(
@@ -126,7 +133,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
         ListTile(
           dense: true,
           leading: Text(
-            "Accelerometer/Gyroscope Sampling Rate",
+            _getMotionSensorText(),
             style: TextStyle(fontSize: 12),
           ),
           trailing: deviceSettings.isVersion2()

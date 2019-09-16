@@ -9,14 +9,14 @@ import com.polidea.rxandroidble2.RxBleConnection;
 import com.polidea.rxandroidble2.RxBleDevice;
 
 import org.md2k.motionsenselib.MSConstants;
-import org.md2k.motionsenselib.device.motion_sense.MotionSense;
-import org.md2k.motionsenselib.device.motion_sense_hrv.MotionSenseHrv;
-import org.md2k.motionsenselib.device.motion_sense_hrv_plus.MotionSenseHrvPlus;
-import org.md2k.motionsenselib.device.motion_sense_hrv_plus_2.MotionSenseHrvPlusV2;
-import org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2.MotionSenseHrvPlusGen2;
-import org.md2k.motionsenselib.device.motion_sense_hrv_plus_2_gen2.MotionSenseHrvPlusGen2IR;
-import org.md2k.motionsenselib.device.motion_sense_hrv_2.MotionSenseHrvV2;
-import org.md2k.motionsenselib.device.motion_sense_2.MotionSenseV2;
+import org.md2k.motionsenselib.device.v1.motion_sense.MotionSense;
+import org.md2k.motionsenselib.device.v1.motion_sense_hrv.MotionSenseHrv;
+import org.md2k.motionsenselib.device.v1.motion_sense_hrv_plus.MotionSenseHrvPlus;
+import org.md2k.motionsenselib.device.v2.motion_sense_hrv_plus_2.MotionSenseHrvPlusV2;
+import org.md2k.motionsenselib.device.v2.motion_sense_hrv_plus_2_gen2.MotionSenseHrvPlusGen2IG;
+import org.md2k.motionsenselib.device.v2.motion_sense_hrv_plus_2_gen2.MotionSenseHrvPlusGen2IR;
+import org.md2k.motionsenselib.device.v2.motion_sense_hrv_2.MotionSenseHrvV2;
+import org.md2k.motionsenselib.device.v2.motion_sense_2.MotionSenseV2;
 import org.md2k.motionsenselib.settings.DeviceSettings;
 
 import java.util.ArrayList;
@@ -122,7 +122,7 @@ public abstract class Device {
                 case "MOTION_SENSE_HRV_PLUS_V2":
                     return new MotionSenseHrvPlusV2(rxBleClient, deviceSettings);
                 case "MOTION_SENSE_HRV_PLUS_GEN2_GREEN":
-                    return new MotionSenseHrvPlusGen2(rxBleClient, deviceSettings);
+                    return new MotionSenseHrvPlusGen2IG(rxBleClient, deviceSettings);
                 case "MOTION_SENSE_HRV_PLUS_GEN2_RED":
                     return new MotionSenseHrvPlusGen2IR(rxBleClient, deviceSettings);
         }
@@ -177,7 +177,7 @@ public abstract class Device {
                         reconnect();
                     }
                 }, throwable -> {
-                    if(MSConstants.DEBUG) Log.d("abc", "error=" + throwable.toString());
+                    if(MSConstants.DEBUG) Log.e("abc", "error=" + throwable.toString());
 
                 });
     }
