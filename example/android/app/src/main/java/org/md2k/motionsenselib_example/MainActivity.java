@@ -150,7 +150,7 @@ public class MainActivity extends FlutterActivity {
                 String filename = d.getDeviceSettings().getDeviceId() + "_" + System.currentTimeMillis() + ".csv";
 
                 ReceiveCallback r = data -> {
-                    results.add(d.toString());
+                    results.add(data.toString());
                     synchronized (results) {
                         if (results.size() > 100) {
                             try {
