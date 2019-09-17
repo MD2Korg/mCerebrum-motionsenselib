@@ -152,9 +152,8 @@ public class MainActivity extends FlutterActivity {
                 ReceiveCallback r = data -> {
                     results.add(data.toString());
                     synchronized (results) {
-                        if (results.size() > 100) {
+                        if (results.size() > 500) {
                             try {
-                                Log.d("abc", "writing");
                                 if (files.get(d.getDeviceSettings().getDeviceId()) == null) {
                                     File newFile = new File(privateDir, filename);
                                     FileWriter fw = new FileWriter(newFile);
@@ -170,8 +169,6 @@ public class MainActivity extends FlutterActivity {
                             }
                         }
                     }
-
-                    Log.d("abc", d.toString());
                 };
                 d.addListener(r);
                 receiveCallbacks.put(d, r);

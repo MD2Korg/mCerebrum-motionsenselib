@@ -56,7 +56,7 @@ public class MotionSenseHrvPlusGen2IG extends MotionSenseHrvPlusGen2 {
             }
         } else {
             if (deviceSettings.isPpgEnable()) {
-                sensorInfoArrayList.put(SensorType.PPG, createPPGInfo("measure the value of ppg (infrared, red)", new String[]{"infrared1", "infrared2", "green1", "green2"}));
+                sensorInfoArrayList.put(SensorType.PPG, createPPGInfo("measure the value of ppg (infrared, green)", new String[]{"infrared1", "infrared2", "green1", "green2"}));
             }
             if (deviceSettings.isRawPpgEnable()) {
                 sensorInfoArrayList.put(SensorType.PPG_RAW, createPPGRawInfo(14));

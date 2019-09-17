@@ -91,7 +91,7 @@ class CharacteristicPPGFilteredOldV2 extends CharacteristicsV2 {
      */
     private static double convertFilteredPPGValues(byte floatCast3, byte floatCast2, byte floatCast1, byte floatCast0) {
         byte[] bytes = new byte[]{floatCast0, floatCast1, floatCast2, floatCast3};
-        return ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+        return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getFloat();
     }
 
 

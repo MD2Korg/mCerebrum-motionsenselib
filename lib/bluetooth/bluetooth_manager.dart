@@ -45,7 +45,6 @@ class BluetoothManager {
 
     _scanning=true;
     Guid g = new Guid("0000180f-0000-1000-8000-00805f9b34fb");
-    print("start scan");
     _scanSubscription = _flutterBlue.scan(withServices: [g]).listen((scanResult) {
       for(int i=0;i<scanList.length;i++){
         if(scanList[i].bluetoothDevice.id.toString().toLowerCase()==scanResult.device.id.toString().toLowerCase())
@@ -56,13 +55,11 @@ class BluetoothManager {
           return;
       }
       scanList.add(new Device(scanResult.device));
-      print("device = " + scanResult.device.name + " " + scanResult.device.id.toString());
       myFunc(scanList);
     });
   }
 
   Future<void> stopScan() async{
-    print("stop scan");
     await _flutterBlue.stopScan();
     if(_scanSubscription!=null) {
       await _scanSubscription.cancel();
@@ -101,7 +98,7 @@ class BluetoothManager {
       case 2: deviceSettings=new DeviceSettings("MotionSenseHRV_V2","MOTION_SENSE_HRV_V2", device.platformId, device.bluetoothDevice.id.toString(), versionStr);
       break;
       case 2: deviceSettings=new DeviceSettings("MotionSenseHRV+_V2","MOTION_SENSE_HRV_PLUS_V2", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
-      case 4: deviceSettings=new DeviceSettings("MotionSenseHRV+Gen2 (Green)","MOTION_SENSE_HRV_PLUS_GEN2_GREEN", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
+      case 4: deviceSettings=new DeviceSettings("MotionSenseHRV+Gen2 (Red)","MOTION_SENSE_HRV_PLUS_GEN2_RED", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
       case 5: deviceSettings=new DeviceSettings("MotionSenseHRV+Gen2 (Green)","MOTION_SENSE_HRV_PLUS_GEN2_GREEN", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
       case 6: deviceSettings=new DeviceSettings("MotionSenseHRV+Gen2 (Red)","MOTION_SENSE_HRV_PLUS_GEN2_RED", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
     }

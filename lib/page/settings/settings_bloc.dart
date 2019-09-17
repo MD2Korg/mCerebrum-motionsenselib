@@ -94,8 +94,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   @override
   Stream<SettingsState> mapEventToState(SettingsEvent event) async* {
-
-    print("settings_bloc: event = " + event.toString());
     if (event is InitEvent) {
       PermissionStatus p =
           await new LocationPermissions().checkPermissionStatus();
@@ -128,7 +126,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       configuredSink.add(bluetoothManager.getConfiguredDevices());
       scanSink.add(bluetoothManager.scanList);
       yield LoadedState();
-      print("abc");
     } else if (event is DeleteDeviceEvent) {
       bluetoothManager.deleteDevice(event.deviceId);
       configuredSink.add(bluetoothManager.getConfiguredDevices());

@@ -29,7 +29,6 @@ class _SettingsPageState extends State<SettingsPage> {
   bool isEdit = false;
 
   void onDone() {
-    print("on done");
   }
 
   Widget _showStatus(SettingsState state) {
@@ -192,7 +191,6 @@ class _SettingsPageState extends State<SettingsPage> {
               isEdit = true;
               _settingsBloc
                   .dispatch(DeleteDeviceEvent(deviceSettings[i].deviceId));
-              print("abc");
             } else {
               var res = await Navigator.push(
                   context,
@@ -234,27 +232,18 @@ class _SettingsPageState extends State<SettingsPage> {
         body: BlocListener(
           bloc: _settingsBloc,
           listener: (BuildContext context, SettingsState state) async {
-            print("state = " + state.toString());
-
             if (state is PermissionRequiredState) {
               await new LocationPermissions().requestPermissions();
               _settingsBloc.dispatch(InitEvent());
             } else if (state is LoadingState) {
               _progressDialog.show();
-//              progressDialog.setMessage(state.message);
-
-//              progressDialog.show();
-              print("state = " + state.toString() + " showing progress");
             } else {
               _progressDialog.hide();
-              print("state = " + state.toString() + " hide progress");
             }
-            print("abc");
           },
           child: BlocBuilder(
             bloc: _settingsBloc,
             builder: (BuildContext context, SettingsState state) {
-              print("page state: " + state.toString());
               return new Scaffold(
                   appBar: AppBar(
                       elevation: 4.0,

@@ -335,7 +335,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                       if (deviceSettings.ppgGreen != v) {
                         deviceSettings.setPpgGreen(v);
                         isEdit = true;
-                        setState(() {});
+//                        setState(() {});
                       }
                     },
                     onSubmitted: (value) {
@@ -387,7 +387,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                       if (deviceSettings.ppgInfrared != v) {
                         deviceSettings.setPpgInfrared(v);
                         isEdit = true;
-                        setState(() {});
+//                        setState(() {});
                       }
                     },
                     onSubmitted: (value) {

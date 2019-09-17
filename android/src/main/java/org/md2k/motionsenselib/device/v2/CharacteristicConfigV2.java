@@ -49,9 +49,9 @@ public abstract class CharacteristicConfigV2 {
     }
 
     protected Single<byte[]> setPPGObservable(RxBleConnection rxBleConnection, int ppgRed, int ppgGreen, int ppgInfra) {
-        Log.d("abc","ppg pre = "+ppgRed+" "+ppgGreen+" "+ppgInfra);
+        Log.d("abc","ppg pre "+ppgRed+" "+ppgGreen+" "+ppgInfra);
         byte[] bytes = setPPGConfiguration(ppgRed, ppgGreen, ppgInfra);
-        Log.d("abc","ppg post = "+(bytes[1] & 0xff)+" "+(bytes[2] & 0xff)+" "+(bytes[3] & 0xff));
+        Log.d("abc","ppg post "+(bytes[1] & 0xff)+" "+(bytes[2] & 0xff)+" "+(bytes[3] & 0xff));
 
         return rxBleConnection.writeCharacteristic(CHARACTERISTIC_UUID, bytes);
     }
