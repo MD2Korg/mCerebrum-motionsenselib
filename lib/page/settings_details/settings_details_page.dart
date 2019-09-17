@@ -29,7 +29,8 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        Navigator.pop(context, {"deviceSettings":deviceSettings, "edit":isEdit});
+        Navigator.pop(
+            context, {"deviceSettings": deviceSettings, "edit": isEdit});
         return Future.value(false);
       },
       child: new Scaffold(
@@ -119,11 +120,15 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
       ),
     );
   }
-  String _getMotionSensorText(){
-    switch(deviceSettings.platformType){
-      case "MOTION_SENSE_HRV": return "Acl/Gyro/PPG Sampling Rate";
-      case "MOTION_SENSE_HRV_PLUS": return "Acl/Quaternion/PPG Sampling Rate";
-      default: return "Accelerometer/Gyroscope Sampling Rate";
+
+  String _getMotionSensorText() {
+    switch (deviceSettings.platformType) {
+      case "MOTION_SENSE_HRV":
+        return "Acl/Gyro/PPG Sampling Rate";
+      case "MOTION_SENSE_HRV_PLUS":
+        return "Acl/Quaternion/PPG Sampling Rate";
+      default:
+        return "Accelerometer/Gyroscope Sampling Rate";
     }
   }
 
@@ -269,6 +274,18 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12, color: Colors.red),
                     keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      int v = 0;
+                      if (value != null && value.length != 0)
+                        v = double.parse(value).round();
+                      if (v < 0) v = 0;
+                      if (v > 255) v = 255;
+                      if (deviceSettings.ppgRed != v) {
+                        deviceSettings.setPpgRed(v);
+                        isEdit = true;
+//                        setState(() {});
+                      }
+                    },
                     onSubmitted: (value) {
                       int v = 0;
                       if (value != null && value.length != 0)
@@ -309,6 +326,18 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12, color: Colors.green),
                     keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      int v = 0;
+                      if (value != null && value.length != 0)
+                        v = double.parse(value).round();
+                      if (v < 0) v = 0;
+                      if (v > 255) v = 255;
+                      if (deviceSettings.ppgGreen != v) {
+                        deviceSettings.setPpgGreen(v);
+                        isEdit = true;
+                        setState(() {});
+                      }
+                    },
                     onSubmitted: (value) {
                       int v = 0;
                       if (value != null && value.length != 0)
@@ -325,7 +354,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                 ),
               )
             : Container(),
-        deviceSettings.isVersion2() && !deviceSettings.isMotionSense() && !deviceSettings.isMotionSenseHRVPlusGen2()
+        deviceSettings.isVersion2() && !deviceSettings.isMotionSense()
             ? ListTile(
                 dense: true,
                 title: Text(
@@ -349,6 +378,18 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12, color: Colors.black45),
                     keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      int v = 0;
+                      if (value != null && value.length != 0)
+                        v = double.parse(value).round();
+                      if (v < 0) v = 0;
+                      if (v > 255) v = 255;
+                      if (deviceSettings.ppgInfrared != v) {
+                        deviceSettings.setPpgInfrared(v);
+                        isEdit = true;
+                        setState(() {});
+                      }
+                    },
                     onSubmitted: (value) {
                       int v = 0;
                       if (value != null && value.length != 0)
@@ -375,7 +416,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                 trailing: Checkbox(
                   value: deviceSettings.ppgFilterEnable,
                   onChanged: (bool newValue) {
-                    if(deviceSettings.ppgFilterEnable!=newValue) {
+                    if (deviceSettings.ppgFilterEnable != newValue) {
                       deviceSettings.setPpgFilterEnable(newValue);
                       isEdit = true;
                       setState(() {});
@@ -437,7 +478,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                   if (value != null && value.length != 0) v = int.parse(value);
                   if (v < 10) v = 10;
                   if (v > 120) v = 120;
-                  if(deviceSettings.minConnectionInterval!=v) {
+                  if (deviceSettings.minConnectionInterval != v) {
                     deviceSettings.setMinConnectionInterval(v);
                     isEdit = true;
                     setState(() {});

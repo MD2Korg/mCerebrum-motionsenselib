@@ -1,6 +1,8 @@
 package org.md2k.motionsenselib.device.v2;
 
 
+import android.util.Log;
+
 import com.polidea.rxandroidble2.RxBleConnection;
 
 import org.md2k.motionsenselib.device.Enumeration;
@@ -47,7 +49,10 @@ public abstract class CharacteristicConfigV2 {
     }
 
     protected Single<byte[]> setPPGObservable(RxBleConnection rxBleConnection, int ppgRed, int ppgGreen, int ppgInfra) {
+        Log.d("abc","ppg pre = "+ppgRed+" "+ppgGreen+" "+ppgInfra);
         byte[] bytes = setPPGConfiguration(ppgRed, ppgGreen, ppgInfra);
+        Log.d("abc","ppg post = "+(bytes[1] & 0xff)+" "+(bytes[2] & 0xff)+" "+(bytes[3] & 0xff));
+
         return rxBleConnection.writeCharacteristic(CHARACTERISTIC_UUID, bytes);
     }
 
@@ -121,11 +126,11 @@ public abstract class CharacteristicConfigV2 {
         byte opCode = 0x01; // Select ppg configuration
 
         if (red < 0) red = 0;
-        if (red > 200) red = 200;
+        if (red > 255) red = 255;
         if (green < 0) green = 0;
-        if (green > 200) green = 200;
+        if (green > 255) green = 255;
         if (infrared < 0) infrared = 0;
-        if (infrared > 100) infrared = 100;
+        if (infrared > 255) infrared = 255;
 
 
 //        if (generation == 2) {
