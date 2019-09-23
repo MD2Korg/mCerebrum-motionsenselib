@@ -6,15 +6,11 @@ import 'package:motionsenselib/settings/settings.dart';
 
 class MotionsenselibExample {
   static const MethodChannel _channel = const MethodChannel('org.md2k.motionsenselib_example.channel');
-  static const _PERMISSION = "PERMISSION";
   static const _READ_SETTINGS = 'READ_SETTINGS';
   static const _SAVE_SETTINGS = 'SAVE_SETTINGS';
   static const _SAVE_DATA_START = 'SAVE_DATA_START';
   static const _SAVE_DATA_STOP = 'SAVE_DATA_STOP';
 
-  static Future<bool> permission() async {
-    return await _channel.invokeMethod(_PERMISSION);
-  }
 
   static Future<bool> saveSettings(Settings settings) async {
     String x = jsonEncode(settings);

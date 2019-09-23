@@ -54,12 +54,11 @@ public class Data {
     @NonNull
     @Override
     public String toString(){
-        String sampleStr = "";
+        String sampleStr = String.valueOf(timestamp);
         if(sample instanceof double[]){
             double[] s =getSample();
-            sampleStr= String.valueOf(s[0]);
-            for(int i = 1;i<s.length;i++){
-                sampleStr+=","+ s[i];
+            for(int i = 0;i<s.length;i++){
+                sampleStr+=","+ String.valueOf(s[i]);
             }
         }
         return sensorType.name()+","+sampleStr;

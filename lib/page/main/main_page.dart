@@ -6,12 +6,14 @@ import 'package:motionsenselib/data/summary.dart';
 import 'package:motionsenselib/page/settings/settings_page.dart';
 import 'package:motionsenselib/settings/settings.dart';
 import 'package:motionsenselib/MotionSense.dart';
-import 'package:motionsenselib_example/motionsenselib_example.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'summary_table.dart';
 
 class MainPage extends StatefulWidget {
-  MainPage();
+  final Settings settings;
+  final Function(String action, dynamic param) callback;
+  MainPage(this.settings, this. callback);
 
   @override
   _MainPageState createState() => _MainPageState();
@@ -20,7 +22,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   Timer _timer;
   Summary summary;
-  Settings settings = new Settings();
 
   _MainPageState();
 
@@ -30,16 +31,19 @@ class _MainPageState extends State<MainPage> {
     summary = Summary(null);
     setup();
   }
+  Future<bool> hasPermission() async{
+    if(await PermissionHandler().checkPermissionStatus(PermissionGroup.location)!=PermissionStatus.granted) return false;
+    return true;
+  }
   Future<void> setup() async{
-    bool hasPermission = await MotionsenselibExample.permission();
-    if(!hasPermission)
-      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
-    else {
-      settings = await MotionsenselibExample.readSettings();
-      await MotionSense.setSettings(settings);
+    if(await hasPermission()==false){
+      await PermissionHandler().requestPermissions([PermissionGroup.location]);
+      if(await hasPermission()==false)
+        SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+    }
+      await MotionSense.setSettings(widget.settings);
       summary = await MotionSense.getSummary();
       startTimerIfRequired();
-    }
     setState(() {
 
     });
@@ -93,7 +97,7 @@ class _MainPageState extends State<MainPage> {
                             borderRadius: new BorderRadius.circular(10.0)),
                         textColor: Colors.green,
                         onPressed: () async{
-                          await MotionsenselibExample.saveDataStart();
+                          widget.callback("background",true);
                           await MotionSense.setBackgroundService(true);
                           summary = await MotionSense.getSummary();
                           startTimerIfRequired();
@@ -110,8 +114,8 @@ class _MainPageState extends State<MainPage> {
                             borderRadius: new BorderRadius.circular(10.0)),
                         textColor: Colors.red,
                         onPressed: () async {
+                          widget.callback("background",false);
                           await MotionSense.setBackgroundService(false);
-                          await MotionsenselibExample.saveDataStop();
                           stopTimer();
                           summary = await MotionSense.getSummary();
                           setState(() {});
@@ -128,7 +132,7 @@ class _MainPageState extends State<MainPage> {
                 style: TextStyle(fontSize: 16),
               ),
               subtitle: Text("Device Configured: " +
-                  settings.motionsense_devices.length.toString()),
+                  widget.settings.motionsense_devices.length.toString()),
               trailing: new OutlineButton(
                   color: Colors.green,
                   shape: new RoundedRectangleBorder(
@@ -140,11 +144,12 @@ class _MainPageState extends State<MainPage> {
                         context,
                         new MaterialPageRoute(
                             builder: (BuildContext context) =>
-                                new SettingsPage(settings)));
+                                new SettingsPage(widget.settings)));
                     if (res["edit"]) {
-                      settings = res["settings"];
-                      await MotionSense.setSettings(settings);
-                      await MotionsenselibExample.saveSettings(settings);
+//                      widget.settings = res["settings"];
+                      await MotionSense.setSettings(widget.settings);
+                      widget.callback("settings",widget.settings);
+//                      await MotionsenselibExample.saveSettings(settings);
                       summary = await MotionSense.getSummary();
                       setState(() {});
                     }
