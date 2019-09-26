@@ -30,12 +30,12 @@ class Settings{
   }
   factory Settings.fromJson(Map<String, dynamic> json){
     Settings s = new Settings();
-    s.motionsense_enable = json['motionsense_enable'];
-    s.motionsense_debugEnable = json['motionsense_debugEnable'];
-    s.motionsense_requiredDeviceNo = json['motionsense_requiredDeviceNo'];
-    var list = json['motionsense_devices'] as List;
+    s.motionsense_enable = json['motionsense_enable']??true;
+    s.motionsense_debugEnable = json['motionsense_debugEnable']??true;
+    s.motionsense_requiredDeviceNo = json['motionsense_requiredDeviceNo']??0;
+    var list = json['motionsense_devices']==null?List(): json['motionsense_devices'] as List;
     s.motionsense_devices = list.map((i) => DeviceSettings.fromJson(i)).toList();
-    list = json['motionsense_defaultSettings'] as List;
+    list = json['motionsense_defaultSettings']==null?List():json['motionsense_defaultSettings'] as List;
     s.motionsense_defaultSettings = list.map((i) => DeviceSettings.fromJson(i)).toList();
     return s;
   }

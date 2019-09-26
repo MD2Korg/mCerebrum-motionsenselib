@@ -58,20 +58,6 @@ public class MainActivity extends FlutterActivity {
             @Override
             public void onMethodCall(@NonNull MethodCall methodCall, @NonNull MethodChannel.Result result) {
                 switch (methodCall.method) {
-                    case "PERMISSION":
-                        Dexter.withActivity(MainActivity.this).withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION).withListener(new MultiplePermissionsListener() {
-                            @Override
-                            public void onPermissionsChecked(MultiplePermissionsReport report) {
-                                if (report.areAllPermissionsGranted()) result.success(true);
-                                else result.success(false);
-                            }
-
-                            @Override
-                            public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
-                                token.continuePermissionRequest();
-                            }
-                        }).check();
-                        break;
                     case "READ_SETTINGS":
                         StringBuilder myData = new StringBuilder();
                         try {

@@ -23,9 +23,9 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
  * MotionsenselibPlugin
  */
 public class MotionsenselibPlugin implements MethodCallHandler {
+    private static final String SET_SETTING = "SET_SETTINGS";
     private static final String GET_SUMMARY = "GET_SUMMARY";
     private static final String BACKGROUND_SERVICE = "BACKGROUND_SERVICE";
-    private static final String SET_SETTING = "SET_SETTINGS";
     private static final String PLOT = "PLOT";
     private Activity activity;
 
