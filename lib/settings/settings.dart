@@ -33,9 +33,12 @@ class Settings{
     s.motionsense_enable = json['motionsense_enable']??true;
     s.motionsense_debugEnable = json['motionsense_debugEnable']??true;
     s.motionsense_requiredDeviceNo = json['motionsense_requiredDeviceNo']??0;
-    var list = json['motionsense_devices']==null?List(): json['motionsense_devices'] as List;
+    var list = (json['motionsense_devices']==null?List(): json['motionsense_devices'] as List);
+    if(list==null || list.length==0) s.motionsense_devices=List<DeviceSettings>();
+    else
     s.motionsense_devices = list.map((i) => DeviceSettings.fromJson(i)).toList();
-    list = json['motionsense_defaultSettings']==null?List():json['motionsense_defaultSettings'] as List;
+    list = (json['motionsense_defaultSettings']==null?List():json['motionsense_defaultSettings'] as List);
+    if(list==null || list.length==0) s.motionsense_defaultSettings=List<DeviceSettings>();
     s.motionsense_defaultSettings = list.map((i) => DeviceSettings.fromJson(i)).toList();
     return s;
   }
