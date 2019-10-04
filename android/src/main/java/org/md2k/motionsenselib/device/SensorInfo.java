@@ -30,7 +30,7 @@ public class SensorInfo {
     private SensorType sensorType;
     private String title;
     private String description;
-    private String[] fields;
+    private Field[] fields;
     private String unit;
     private long startSampleTime;
     private long lastSampleTime;
@@ -88,7 +88,7 @@ public class SensorInfo {
         return description;
     }
 
-    public String[] getFields() {
+    public Field[] getFields() {
         return fields;
     }
 
@@ -129,7 +129,7 @@ public class SensorInfo {
             return this;
         }
 
-        public ISensorInfo.IUnit setFields(String[] fields) {
+        public ISensorInfo.IUnit setFields(Field[] fields) {
             sensorInfo.fields = fields;
             return this;
         }

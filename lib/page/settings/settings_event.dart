@@ -1,8 +1,7 @@
-import 'package:equatable/equatable.dart';
 import 'package:motionsenselib/settings/device.dart';
 
-abstract class SettingsEvent extends Equatable {
-  SettingsEvent([List props = const []]) : super(props);
+abstract class SettingsEvent {
+  SettingsEvent([List props = const []]);
 }
 class InitEvent extends SettingsEvent{}
 class EnableGPSEvent extends SettingsEvent{}

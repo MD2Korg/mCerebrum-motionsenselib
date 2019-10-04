@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:motionsenselib/data/summary.dart';
 import 'package:motionsenselib/page/settings/settings_page.dart';
-import 'package:motionsenselib/settings/settings.dart';
-import 'package:motionsenselib/MotionSense.dart';
+import 'package:motionsenselib/settings/motionsense_settings.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../motionsenselib.dart';
 import 'summary_table.dart';
 
 class MainPage extends StatefulWidget {
-  final Settings settings;
+  final MotionSenseSettings settings;
   final Function(String action, dynamic param) callback;
   MainPage(this.settings, this. callback);
 
@@ -41,8 +41,8 @@ class _MainPageState extends State<MainPage> {
       if(await hasPermission()==false)
         SystemChannels.platform.invokeMethod('SystemNavigator.pop');
     }
-      await MotionSense.setSettings(widget.settings);
-      summary = await MotionSense.getSummary();
+      await MotionSenseLib.setSettings(widget.settings);
+      summary = await MotionSenseLib.getSummary();
       startTimerIfRequired();
     setState(() {
 
@@ -51,10 +51,10 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> startTimerIfRequired() async {
     if (_timer != null && _timer.isActive) return;
-    summary = await MotionSense.getSummary();
+    summary = await MotionSenseLib.getSummary();
     if (summary.isRunning()) {
       _timer = new Timer.periodic(const Duration(seconds: 1), (timer) {
-        MotionSense.getSummary().then((onValue) {
+        MotionSenseLib.getSummary().then((onValue) {
           summary = onValue;
           setState(() {});
         });
@@ -98,8 +98,8 @@ class _MainPageState extends State<MainPage> {
                         textColor: Colors.green,
                         onPressed: () async{
                           widget.callback("background",true);
-                          await MotionSense.setBackgroundService(true);
-                          summary = await MotionSense.getSummary();
+                          await MotionSenseLib.setBackgroundService(true);
+                          summary = await MotionSenseLib.getSummary();
                           startTimerIfRequired();
                           setState(() {});
                         },
@@ -115,9 +115,9 @@ class _MainPageState extends State<MainPage> {
                         textColor: Colors.red,
                         onPressed: () async {
                           widget.callback("background",false);
-                          await MotionSense.setBackgroundService(false);
+                          await MotionSenseLib.setBackgroundService(false);
                           stopTimer();
-                          summary = await MotionSense.getSummary();
+                          summary = await MotionSenseLib.getSummary();
                           setState(() {});
                         },
                         child: Icon(
@@ -132,7 +132,7 @@ class _MainPageState extends State<MainPage> {
                 style: TextStyle(fontSize: 16),
               ),
               subtitle: Text("Device Configured: " +
-                  widget.settings.motionsense_devices.length.toString()),
+                  widget.settings.motionSenseDevices.length.toString()),
               trailing: new OutlineButton(
                   color: Colors.green,
                   shape: new RoundedRectangleBorder(
@@ -147,10 +147,10 @@ class _MainPageState extends State<MainPage> {
                                 new SettingsPage(widget.settings)));
                     if (res["edit"]) {
 //                      widget.settings = res["settings"];
-                      await MotionSense.setSettings(widget.settings);
+                      await MotionSenseLib.setSettings(widget.settings);
                       widget.callback("settings",widget.settings);
 //                      await MotionsenselibExample.saveSettings(settings);
-                      summary = await MotionSense.getSummary();
+                      summary = await MotionSenseLib.getSummary();
                       setState(() {});
                     }
                     startTimerIfRequired();
@@ -188,7 +188,7 @@ class _MainPageState extends State<MainPage> {
               ),
             ),
             Expanded(
-              child: new DataSourceTable(summary.getDevices()),
+              child: new DataSourceTable(new DataSourceInfoList(summary.getDevices())),
             )
           ]),
     );

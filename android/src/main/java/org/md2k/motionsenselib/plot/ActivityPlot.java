@@ -44,7 +44,11 @@ public class ActivityPlot extends RealtimeLineChartActivity {
         for (int i = 0; i < samples.length; i++) {
             sampleTemp[i] = (float) samples[i];
         }
-        addEntry(sampleTemp, sensorInfo.getFields(), 400);
+        String[] fields=new String[sensorInfo.getFields().length];
+        for(int i =0;i<sensorInfo.getFields().length;i++){
+            fields[i]=sensorInfo.getFields()[i].getId();
+        }
+        addEntry(sampleTemp, fields, 400);
     }
 
     @Override

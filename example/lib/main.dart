@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:motionsenselib/page/main/main_page.dart';
-import 'package:motionsenselib/settings/settings.dart';
+import 'package:motionsenselib/settings/motionsense_settings.dart';
 import 'package:motionsenselib_example/motionsenselib_example.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
-  Settings settings;
+  MotionSenseSettings settings;
   if(await PermissionHandler().checkPermissionStatus(PermissionGroup.storage)!=PermissionStatus.granted)
   await PermissionHandler().requestPermissions([PermissionGroup.storage]);
   if(await PermissionHandler().checkPermissionStatus(PermissionGroup.storage)!=PermissionStatus.granted) {

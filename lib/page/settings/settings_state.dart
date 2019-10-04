@@ -1,8 +1,7 @@
-import 'package:equatable/equatable.dart';
 
 
-abstract class SettingsState extends Equatable {
-  SettingsState([List props = const []]) : super(props);
+abstract class SettingsState {
+  SettingsState([List props = const []]);
 }
 
 class EmptyState extends SettingsState {}

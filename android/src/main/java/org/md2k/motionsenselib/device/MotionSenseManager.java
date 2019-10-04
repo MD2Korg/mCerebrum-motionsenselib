@@ -9,7 +9,6 @@ import com.polidea.rxandroidble2.LogConstants;
 import com.polidea.rxandroidble2.LogOptions;
 import com.polidea.rxandroidble2.RxBleClient;
 
-import org.md2k.motionsenselib.MSConstants;
 import org.md2k.motionsenselib.settings.DeviceSettings;
 
 import java.util.ArrayList;
@@ -60,7 +59,6 @@ public class MotionSenseManager {
                 return;
             }
 */
-            if (MSConstants.DEBUG)
                 Log.e("error", "Undeliverable exception received, not sure what to do" + e.getMessage());
         });
     }

@@ -3,17 +3,16 @@ import 'dart:io';
 
 import 'package:android_intent/android_intent.dart';
 import 'package:flutter_blue/flutter_blue.dart';
-import 'package:location_permissions/location_permissions.dart';
 import 'package:motionsenselib/settings/device.dart';
 import 'package:motionsenselib/settings/device_settings.dart';
-import 'package:motionsenselib/settings/settings.dart';
+import 'package:motionsenselib/settings/motionsense_settings.dart';
 
 class BluetoothManager {
   bool _scanning=false;
   FlutterBlue _flutterBlue = FlutterBlue.instance;
   StreamSubscription _scanSubscription;
   List<Device> scanList = new List();
-  Settings settings;
+  MotionSenseSettings settings;
 
   BluetoothManager(this.settings);
 
@@ -32,8 +31,8 @@ class BluetoothManager {
     return _scanning;
   }
   bool isExist(Device device){
-    for(int i=0;i<settings.motionsense_devices.length;i++){
-      if(settings.motionsense_devices[i].platformId==device.platformId) return true;
+    for(int i=0;i<settings.motionSenseDevices.length;i++){
+      if(settings.motionSenseDevices[i].platformId==device.platformId) return true;
     }
     return false;
 
@@ -50,8 +49,8 @@ class BluetoothManager {
         if(scanList[i].bluetoothDevice.id.toString().toLowerCase()==scanResult.device.id.toString().toLowerCase())
           return;
       }
-      for(int i=0;i<settings.motionsense_devices.length;i++){
-        if(scanResult.device.id.toString().toLowerCase()==settings.motionsense_devices[i].deviceId.toLowerCase())
+      for(int i=0;i<settings.motionSenseDevices.length;i++){
+        if(scanResult.device.id.toString().toLowerCase()==settings.motionSenseDevices[i].deviceId.toLowerCase())
           return;
       }
       scanList.add(new Device(scanResult.device));
@@ -68,7 +67,7 @@ class BluetoothManager {
     _scanning = false;
   }
   List<DeviceSettings> getConfiguredDevices(){
-    return settings.motionsense_devices;
+    return settings.motionSenseDevices;
   }
   Future<void> addDevice(Device device) async{
     DeviceSettings deviceSettings;
@@ -78,7 +77,7 @@ class BluetoothManager {
       case "MotionSenseHRV+": deviceSettings=new DeviceSettings("MotionSenseHRV+","MOTION_SENSE_HRV_PLUS", device.platformId, device.bluetoothDevice.id.toString(), "1.0.2.0");break;
       case "MotionSense2": deviceSettings=await _addDeviceForV2(device);break;
     }
-    settings.motionsense_devices.add(deviceSettings);
+    settings.motionSenseDevices.add(deviceSettings);
     for(int i=0;i<scanList.length;i++){
       if(scanList[i].bluetoothDevice.id.toString().toLowerCase()==device.bluetoothDevice.id.toString().toLowerCase()){
         scanList.removeAt(i);
@@ -143,9 +142,9 @@ class BluetoothManager {
   }
 
   void deleteDevice(String deviceId) {
-    for(int i=0;i<settings.motionsense_devices.length;i++){
-      if(settings.motionsense_devices[i].deviceId==deviceId) {
-        settings.motionsense_devices.removeAt(i);
+    for(int i=0;i<settings.motionSenseDevices.length;i++){
+      if(settings.motionSenseDevices[i].deviceId==deviceId) {
+        settings.motionSenseDevices.removeAt(i);
         return;
       }
     }

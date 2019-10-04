@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:motionsenselib/settings/settings.dart';
+import 'package:motionsenselib/settings/motionsense_settings.dart';
 
 class MotionsenselibExample {
   static const MethodChannel _channel = const MethodChannel('org.md2k.motionsenselib_example.channel');
@@ -12,16 +12,16 @@ class MotionsenselibExample {
   static const _SAVE_DATA_STOP = 'SAVE_DATA_STOP';
 
 
-  static Future<bool> saveSettings(Settings settings) async {
+  static Future<bool> saveSettings(MotionSenseSettings settings) async {
     String x = jsonEncode(settings);
     return await _channel.invokeMethod(_SAVE_SETTINGS, {"settings":x});
   }
-  static Future<Settings> readSettings() async {
+  static Future<MotionSenseSettings> readSettings() async {
     final String res = await _channel.invokeMethod(_READ_SETTINGS);
-    if(res==null || res.length==0) return Settings();
+    if(res==null || res.length==0) return MotionSenseSettings();
     else {
       Map<String, dynamic> x = jsonDecode(res);
-      return Settings.fromJson(x);
+      return MotionSenseSettings.fromJson(x);
     }
   }
   static Future<bool> saveDataStart() async {

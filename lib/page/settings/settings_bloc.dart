@@ -6,7 +6,7 @@ import 'package:location_permissions/location_permissions.dart';
 import 'package:motionsenselib/bluetooth/bluetooth_manager.dart';
 import 'package:motionsenselib/settings/device.dart';
 import 'package:motionsenselib/settings/device_settings.dart';
-import 'package:motionsenselib/settings/settings.dart';
+import 'package:motionsenselib/settings/motionsense_settings.dart';
 
 import 'settings_event.dart';
 import 'settings_state.dart';
@@ -32,10 +32,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Stream<int> get streamStatus => _statusStreamController.stream;
 
-  SettingsBloc(Settings settings){
+  SettingsBloc(MotionSenseSettings settings){
     bluetoothManager = new BluetoothManager(settings);
   }
-  Settings settings(){
+  MotionSenseSettings settings(){
     return bluetoothManager.settings;
   }
 
@@ -143,7 +143,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       });
   }
 
+  @override
   Future<void> dispose() async{
+    _configuredStreamController.close();
+    _statusStreamController.close();
     _scanStreamController.close();
     await bluetoothManager.stopScan();
     super.dispose();

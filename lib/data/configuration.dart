@@ -1,6 +1,6 @@
 
 
-import '../motionsenselib.dart';
+
 
 class Configuration{
 /*

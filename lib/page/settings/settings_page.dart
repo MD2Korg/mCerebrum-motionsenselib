@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:location_permissions/location_permissions.dart';
 import 'package:motionsenselib/settings/device.dart';
 import 'package:motionsenselib/settings/device_settings.dart';
-import 'package:motionsenselib/settings/settings.dart';
+import 'package:motionsenselib/settings/motionsense_settings.dart';
 import 'package:motionsenselib/page/settings/settings_state.dart';
 import 'package:motionsenselib/page/settings_details/settings_details_page.dart';
 
@@ -15,7 +15,7 @@ import 'settings_bloc.dart';
 import 'settings_event.dart';
 
 class SettingsPage extends StatefulWidget {
-  final Settings settings;
+  final MotionSenseSettings settings;
 
   SettingsPage(this.settings);
 
@@ -223,8 +223,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        Settings s = _settingsBloc.settings();
-        print(s.motionsense_devices.length.toString());
+        MotionSenseSettings s = _settingsBloc.settings();
+        print(s.motionSenseDevices.length.toString());
         Navigator.pop(context, {"settings":s, "edit":isEdit});
         return Future.value(false);
       },

@@ -8,7 +8,6 @@ import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleConnection;
 import com.polidea.rxandroidble2.RxBleDevice;
 
-import org.md2k.motionsenselib.MSConstants;
 import org.md2k.motionsenselib.device.v1.motion_sense.MotionSense;
 import org.md2k.motionsenselib.device.v1.motion_sense_hrv.MotionSenseHrv;
 import org.md2k.motionsenselib.device.v1.motion_sense_hrv_plus.MotionSenseHrvPlus;
@@ -148,7 +147,7 @@ public abstract class Device {
 
     private void connect() {
         RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
-        if(MSConstants.DEBUG) Log.e("error", "connect (start)=>  state = "+bleDevice.getConnectionState().name());
+         Log.e("error", "connect (start)=>  state = "+bleDevice.getConnectionState().name());
         if(bleDevice.getConnectionState()!= RxBleConnection.RxBleConnectionState.DISCONNECTED) return;
         connectionDisposable = Observable.timer(3, TimeUnit.SECONDS).flatMap((Function<Long, ObservableSource<RxBleConnection>>) aLong -> bleDevice.establishConnection(false)).flatMap((Function<RxBleConnection, ObservableSource<RxBleConnection>>) this::setConfiguration).flatMap((Function<RxBleConnection, Observable<Data>>) this::getSensingObservable)
                 .observeOn(AndroidSchedulers.mainThread())
@@ -172,12 +171,12 @@ public abstract class Device {
         RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
         connectionStatusDisposable = Observable.merge(Observable.just(bleDevice.getConnectionState()), bleDevice.observeConnectionStateChanges()).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(rxBleConnectionState -> {
-                    if(MSConstants.DEBUG) Log.e("error", "ConnectionStatusListener: (onChange): status = " + rxBleConnectionState.toString());
+                     Log.e("error", "ConnectionStatusListener: (onChange): status = " + rxBleConnectionState.toString());
                     if (rxBleConnectionState == RxBleConnection.RxBleConnectionState.DISCONNECTED) {
                         reconnect();
                     }
                 }, throwable -> {
-                    if(MSConstants.DEBUG) Log.e("abc", "error=" + throwable.toString());
+                     Log.e("abc", "error=" + throwable.toString());
 
                 });
     }
@@ -194,14 +193,15 @@ public abstract class Device {
             sensorInfo.setLastSampleTime(data.getTimestamp());
             if(sensorInfo.getStartSampleTime()<=0) sensorInfo.setStartSampleTime(data.getTimestamp());
             else
-            if(MSConstants.DEBUG) Log.d("info",sensorInfo.getSensorType()+" "+(double)(sensorInfo.getCount())*1000.0/(sensorInfo.getLastSampleTime()-sensorInfo.getStartSampleTime()));
+             Log.d("info",sensorInfo.getSensorType()+" "+(double)(sensorInfo.getCount())*1000.0/(sensorInfo.getLastSampleTime()-sensorInfo.getStartSampleTime()));
         }
+        Log.d("abc","receiveCallback = "+receiveCallbacks.size());
 
         for (ReceiveCallback receiveCallback : receiveCallbacks) {
             try {
                 receiveCallback.onReceive(data);
             } catch (Exception e) {
-                if(MSConstants.DEBUG) Log.e("abc","onConnectionReceive: exception can't send data="+e.getMessage());
+                 Log.e("abc","onConnectionReceive: exception can't send data="+e.getMessage());
                 receiveCallbacks.remove(receiveCallback);
             }
         }
@@ -209,23 +209,23 @@ public abstract class Device {
 
     private void reconnect() {
         RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
-        if(MSConstants.DEBUG) Log.e("error", "reconnect (start)=>  state = "+bleDevice.getConnectionState().name());
+         Log.e("error", "reconnect (start)=>  state = "+bleDevice.getConnectionState().name());
         if(bleDevice.getConnectionState()!= RxBleConnection.RxBleConnectionState.DISCONNECTED)
             disconnect();
         else if(bleDevice.getConnectionState()== RxBleConnection.RxBleConnectionState.DISCONNECTED)
             connect();
-        else if(MSConstants.DEBUG) Log.e("error", "inside reconnect => ble is not disconnected. state = "+bleDevice.getConnectionState().name());
+        else  Log.e("error", "inside reconnect => ble is not disconnected. state = "+bleDevice.getConnectionState().name());
     }
 
     private void onConnectionFailure(Throwable throwable) {
-        if(MSConstants.DEBUG) Log.e("error", "onConnectionFailure: " + throwable.getMessage());
+         Log.e("error", "onConnectionFailure: " + throwable.getMessage());
         reconnect();
     }
 
     private void disconnect() {
-        if(MSConstants.DEBUG) Log.d("abc", "disconnecting...");
+         Log.d("abc", "disconnecting...");
         RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
-        if(MSConstants.DEBUG) Log.e("error", "disconnect (start)=>  state = "+bleDevice.getConnectionState().name());
+         Log.e("error", "disconnect (start)=>  state = "+bleDevice.getConnectionState().name());
         if(bleDevice.getConnectionState()== RxBleConnection.RxBleConnectionState.DISCONNECTED)
             return;
         if(connectionDisposable==null) return;
@@ -234,10 +234,10 @@ public abstract class Device {
                 connectionDisposable.dispose();
             }
         }catch (Exception e){
-            if(MSConstants.DEBUG) Log.e("abc", connectionDisposable.isDisposed() ?"not disposed": "null message=" + e.getMessage());
+             Log.e("abc", connectionDisposable.isDisposed() ?"not disposed": "null message=" + e.getMessage());
         }
         connectionDisposable = null;
-        if(MSConstants.DEBUG) Log.e("error", "disconnect (end)=>  state = "+bleDevice.getConnectionState().name());
+         Log.e("error", "disconnect (end)=>  state = "+bleDevice.getConnectionState().name());
     }
 
     public void addListener(@NonNull ReceiveCallback receiveCallback) {
@@ -262,23 +262,23 @@ public abstract class Device {
     }
 
     protected SensorInfo createAccelerometerInfo() {
-        return SensorInfo.builder().setSensorType(SensorType.ACCELEROMETER).setTitle("Accelerometer").setDescription("measures the 3 axes acceleration (x,y,z) applied to the device in g").setFields(new String[]{"X", "Y", "Z"}).setUnit("g").setRange(-4, 4).build();
+        return SensorInfo.builder().setSensorType(SensorType.ACCELEROMETER).setTitle("Accelerometer").setDescription("measures the 3 axes acceleration (x,y,z) applied to the device in g").setFields(new Field[]{new Field("x", "x", "contains x axis acceleration"), new Field("y", "y", "contains y axis acceleration"), new Field("z", "z", "contains z axis acceleration")}).setUnit("g").setRange(-4, 4).build();
     }
 
     protected SensorInfo createAccelerometerDataQualityInfo() {
-        return SensorInfo.builder().setSensorType(SensorType.ACCELEROMETER_DATA_QUALITY).setTitle("DataQuality (Acl)").setDescription("measures the data quality of accelerometer values: [0=GOOD, 1=NO_DATA, 2=NOT_WORN, 3=LOOSE_ATTACHMENT]").setFields(new String[]{"DATA_QUALITY"}).setUnit("number").setRange(0, 3).build();
+        return SensorInfo.builder().setSensorType(SensorType.ACCELEROMETER_DATA_QUALITY).setTitle("DataQuality (Acl)").setDescription("measures the data quality of accelerometer values: [0=GOOD, 1=NO_DATA, 2=NOT_WORN, 3=LOOSE_ATTACHMENT]").setFields(new Field[]{new Field("data_quality", "Data Quality (Acl)", "measures the data quality of accelerometer values: [0=GOOD, 1=NO_DATA, 2=NOT_WORN, 3=LOOSE_ATTACHMENT]")}).setUnit("number").setRange(0, 3).build();
     }
 
     protected SensorInfo createGyroscopeInfo() {
-        return SensorInfo.builder().setSensorType(SensorType.GYROSCOPE).setTitle("Gyroscope").setDescription("measure the rate of rotation around the device's local X, Y and Z axis in degree/second").setFields(new String[]{"X", "Y", "Z"}).setUnit("degree/second").setRange(-1000, 1000).build();
+        return SensorInfo.builder().setSensorType(SensorType.GYROSCOPE).setTitle("Gyroscope").setDescription("measure the rate of rotation around the device's local X, Y and Z axis in degree/second").setFields(new Field[]{new Field("x", "x", "contains rotation in x axis"), new Field("y", "y", "contains rotation in y axis"), new Field("z", "z", "contains rotation in z axis")}).setUnit("degree/second").setRange(-1000, 1000).build();
     }
 
     protected SensorInfo createQuaternionInfo() {
-        return SensorInfo.builder().setSensorType(SensorType.QUATERNION).setTitle("Quaternion").setDescription("measure the rate of rotation around the device\'s local X, Y and Z axis").setFields(new String[]{"X", "Y", "Z"}).setUnit("degree/second").setRange(-1, 1).build();
+        return SensorInfo.builder().setSensorType(SensorType.QUATERNION).setTitle("Quaternion").setDescription("measure the rate of rotation around the device\'s local X, Y and Z axis").setFields(new Field[]{new Field("x", "x", "contains rotation in x axis "), new Field("y", "y", "contains rotation in y axis"), new Field("z", "z", "contains rotation in z axis")}).setUnit("degree/second").setRange(-1, 1).build();
     }
 
     protected SensorInfo createMotionSequenceNumberInfo(int maxValue) {
-        return SensorInfo.builder().setSensorType(SensorType.MOTION_SEQUENCE_NUMBER).setTitle("Sequence(M)").setDescription("sequence number of the motion packet").setFields(new String[]{"SEQ"}).setUnit("number").setRange(0, maxValue).build();
+        return SensorInfo.builder().setSensorType(SensorType.MOTION_SEQUENCE_NUMBER).setTitle("Sequence(M)").setDescription("sequence number of the motion packet").setFields(new Field[]{new Field("sequence_number", "Sequence Number (Motion)", "contains sequence number of the motion packet")}).setUnit("number").setRange(0, maxValue).build();
     }
 
     protected SensorInfo createMotionRawInfo(int length) {
@@ -286,19 +286,19 @@ public abstract class Device {
     }
 
     protected SensorInfo createBatteryInfo() {
-        return SensorInfo.builder().setSensorType(SensorType.BATTERY).setTitle("Battery").setDescription("current battery level in percentage").setFields(new String[]{"LEVEL"}).setUnit("percentage").setRange(0, 100).build();
+        return SensorInfo.builder().setSensorType(SensorType.BATTERY).setTitle("Battery").setDescription("current battery level in percentage").setFields(new Field[]{new Field("battery", "Battery Level", "current battery level")}).setUnit("percentage").setRange(0, 100).build();
     }
 
     protected SensorInfo createMagnetometerInfo() {
-        return SensorInfo.builder().setSensorType(SensorType.MAGNETOMETER).setTitle("Magnetometer").setDescription("measure magnetic field in the X, Y and Z axis in micro tesla").setFields(new String[]{"X", "Y", "Z"}).setUnit("micro tesla").setRange(-400, 400).build();
+        return SensorInfo.builder().setSensorType(SensorType.MAGNETOMETER).setTitle("Magnetometer").setDescription("measure magnetic field in the X, Y and Z axis in micro tesla").setFields(new Field[]{new Field("x", "x", "contains x axis magnetic field"), new Field("y", "y", "contains y axis magnetic field"), new Field("z", "z", "contains z axis magnetic field")}).setUnit("micro tesla").setRange(-400, 400).build();
     }
 
     protected SensorInfo createMagnetometerSensitivityInfo() {
-        return SensorInfo.builder().setSensorType(SensorType.MAGNETOMETER_SENSITIVITY).setTitle("Mag. Sensitivity").setDescription("measure sensitivity of the magnetic field in m").setFields(new String[]{"X", "Y", "Z"}).setUnit("micro tesla").setRange(-400, 400).build();
+        return SensorInfo.builder().setSensorType(SensorType.MAGNETOMETER_SENSITIVITY).setTitle("Mag. Sensitivity").setDescription("measure sensitivity of the magnetic field in m").setFields(new Field[]{new Field("x", "x", "contains magnetic sensitivity in x axis"), new Field("y", "y", "contains magnetic sensitivity in y axis"), new Field("z", "z", "contains magnetic sensitivity in z axis")}).setUnit("micro tesla").setRange(-400, 400).build();
     }
 
     protected SensorInfo createMagnetometerSequenceNumberInfo(int maxValue) {
-        return SensorInfo.builder().setSensorType(SensorType.MAGNETOMETER_SEQUENCE_NUMBER).setTitle("Sequence(Mag)").setDescription("sequence number of the magnetometer packet").setFields(new String[]{"SEC"}).setUnit("number").setRange(0, maxValue).build();
+        return SensorInfo.builder().setSensorType(SensorType.MAGNETOMETER_SEQUENCE_NUMBER).setTitle("Sequence(Mag)").setDescription("sequence number of the magnetometer packet").setFields(new Field[]{new Field("sequence_number", "Sequence Number (Mag)", "contains sequence number of the magnetometer packet")}).setUnit("number").setRange(0, maxValue).build();
     }
 
     protected SensorInfo createMagnetometerRawInfo(int length) {
@@ -306,19 +306,20 @@ public abstract class Device {
     }
 
     protected SensorInfo createPPGInfo(String description, String[] fields) {
-        return SensorInfo.builder().setSensorType(SensorType.PPG).setTitle("Ppg").setDescription(description).setFields(fields).setUnit("number").setRange(0, 250000).build();
+
+        return SensorInfo.builder().setSensorType(SensorType.PPG).setTitle("Ppg").setDescription(description).setFields(createField(fields)).setUnit("number").setRange(0, 250000).build();
     }
 
     protected SensorInfo createPPGFilteredInfo(String description, String[] fields) {
-        return SensorInfo.builder().setSensorType(SensorType.PPG_FILTERED).setTitle("Ppg Filtered").setDescription(description).setFields(fields).setUnit("number").setRange(-250, 250).build();
+        return SensorInfo.builder().setSensorType(SensorType.PPG_FILTERED).setTitle("Ppg Filtered").setDescription(description).setFields(createField(fields)).setUnit("number").setRange(-250, 250).build();
     }
 
     protected SensorInfo createPPGDataQualityInfo() {
-        return SensorInfo.builder().setSensorType(SensorType.PPG_DATA_QUALITY).setTitle("DataQuality (ppg)").setDescription("measures the data quality of ppg: [0=GOOD, 1=NO_DATA, 2=NOT_WORN, 3=LOOSE_ATTACHMENT]").setFields(new String[]{"DATA_QUALITY"}).setUnit("number").setRange(0, 3).build();
+        return SensorInfo.builder().setSensorType(SensorType.PPG_DATA_QUALITY).setTitle("DataQuality (ppg)").setDescription("measures the data quality of ppg: [0=GOOD, 1=NO_DATA, 2=NOT_WORN, 3=LOOSE_ATTACHMENT]").setFields(new Field[]{new Field("data_quality", "Data Quality (ppg)", "measures the data quality of ppg values: [0=GOOD, 1=NO_DATA, 2=NOT_WORN, 3=LOOSE_ATTACHMENT]")}).setUnit("number").setRange(0, 3).build();
     }
 
     protected SensorInfo createPPGSequenceNumberInfo(int maxValue) {
-        return SensorInfo.builder().setSensorType(SensorType.PPG_SEQUENCE_NUMBER).setTitle("Sequence(ppg)").setDescription("sequence number of the ppg packet").setFields(new String[]{"SEQ"}).setUnit("number").setRange(0, maxValue).build();
+        return SensorInfo.builder().setSensorType(SensorType.PPG_SEQUENCE_NUMBER).setTitle("Sequence(ppg)").setDescription("sequence number of the ppg packet").setFields(new Field[]{new Field("sequence_number", "Sequence Number (PPG)", "contains sequence number of the ppg packet")}).setUnit("number").setRange(0, maxValue).build();
     }
 
     protected SensorInfo createPPGRawInfo(int length) {
@@ -326,21 +327,29 @@ public abstract class Device {
     }
 
     protected SensorInfo createPPGDcInfo(String description, String[] fields) {
-        return SensorInfo.builder().setSensorType(SensorType.PPG_DC).setTitle("Ppg DC").setDescription(description).setFields(fields).setUnit("number").setRange(-500, 500).build();
+        return SensorInfo.builder().setSensorType(SensorType.PPG_DC).setTitle("Ppg DC").setDescription(description).setFields(createField(fields)).setUnit("number").setRange(-500, 500).build();
     }
 
     protected SensorInfo createPPGDcSequenceNumberInfo(int length) {
-        return SensorInfo.builder().setSensorType(SensorType.PPG_DC_SEQUENCE_NUMBER).setTitle("Sequence (ppg dc)").setDescription("sequence number of the ppg dc packet").setFields(new String[]{"SEQ"}).setUnit("number").setRange(0, length).build();
+        return SensorInfo.builder().setSensorType(SensorType.PPG_DC_SEQUENCE_NUMBER).setTitle("Sequence (ppg dc)").setDescription("sequence number of the ppg dc packet").setFields(new Field[]{new Field("sequence_number", "Sequence Number (ppg dc)", "contains sequence number of the ppg dc packet")}).setUnit("number").setRange(0, length).build();
     }
 
     protected SensorInfo createPPGDcRawInfo(int length) {
         return SensorInfo.builder().setSensorType(SensorType.PPG_DC_RAW).setTitle("Raw (PPG DC)").setDescription("raw byte array from ppg dc characteristics").setFields(fill(length)).setUnit("number").setRange(0, 255).build();
     }
 
-    private String[] fill(int length) {
-        String[] filled = new String[length];
+    private Field[] createField(String[] f) {
+        Field[] filled = new Field[f.length];
+        for (int i = 0; i < f.length; i++) {
+            filled[i] = new Field(f[i], f[i], f[i]);
+        }
+        return filled;
+    }
+
+    private Field[] fill(int length) {
+        Field[] filled = new Field[length];
         for (int i = 0; i < length; i++) {
-            filled[i] = "C" + i;
+            filled[i] = new Field("byte_" + i, "Byte "+i, "Byte "+i);
         }
         return filled;
     }

@@ -14,7 +14,7 @@ public interface ISensorInfo {
     }
 
     public interface IFields {
-        IUnit setFields(String[] fields);
+        IUnit setFields(Field[] fields);
     }
 
     public interface IUnit {

@@ -3,7 +3,8 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:motionsenselib/MotionSense.dart';
+
+import '../../motionsenselib.dart';
 class DataSourceInfo {
   DataSourceInfo(this.platformType, this.platformId, this.sensorType,
       this.sensorTitle, this.dataCount, this.frequency, this.lastSample);
@@ -17,15 +18,14 @@ class DataSourceInfo {
   final List<double> lastSample;
 }
 
-class DataSourceInfos extends DataTableSource {
-  List<DataSourceInfo> dataSourceInfos = new List();
+class DataSourceInfoList extends DataTableSource {
+  List<DataSourceInfo> dataSourceInfoList = new List();
 
-  DataSourceInfos(List devices) {
-    dataSourceInfos.clear();
+  DataSourceInfoList(List devices) {
+    dataSourceInfoList.clear();
     for (int i = 0; i < devices.length; i++) {
       String platformId = devices[i]["platformId"];
       String platformType = devices[i]["platformType"];
-      String deviceName = "MS_Gen2(" + platformId.substring(0, 1) + ")";
       String sensorName = devices[i]["sensorName"];
       String sensorType = devices[i]["sensorType"];
       double freq = devices[i]["frequency"];
@@ -33,15 +33,15 @@ class DataSourceInfos extends DataTableSource {
 //        List<double> sample = sensors[j]["lastSample"];
       DataSourceInfo a = new DataSourceInfo(platformType, platformId,
           sensorType, sensorName, count, freq, List());
-      dataSourceInfos.add(a);
+      dataSourceInfoList.add(a);
     }
   }
 
   @override
   DataRow getRow(int index) {
     assert(index >= 0);
-    if (index >= dataSourceInfos.length) return null;
-    final DataSourceInfo sensor = dataSourceInfos[index];
+    if (index >= dataSourceInfoList.length) return null;
+    final DataSourceInfo sensor = dataSourceInfoList[index];
     return DataRow.byIndex(index: index,
 /*
         onSelectChanged: (bool selected){
@@ -68,7 +68,7 @@ class DataSourceInfos extends DataTableSource {
   }
 
   @override
-  int get rowCount => dataSourceInfos.length;
+  int get rowCount => dataSourceInfoList.length;
 
   @override
   bool get isRowCountApproximate => false;
@@ -78,15 +78,13 @@ class DataSourceInfos extends DataTableSource {
 }
 
 class DataSourceTable extends StatelessWidget {
-  DataSourceInfos dataSourceInfos;
+  final DataSourceInfoList dataSourceInfoList;
 
-  DataSourceTable(List devices) {
-    dataSourceInfos = new DataSourceInfos(devices);
-  }
+  DataSourceTable(this.dataSourceInfoList);
 
   @override
   Widget build(BuildContext context) {
-    return dataSourceInfos == null
+    return dataSourceInfoList == null
         ? SizedBox()
         : SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -109,7 +107,7 @@ class DataSourceTable extends StatelessWidget {
                     ),
                     DataColumn(label: const Text('Plot')),
                   ],
-                  rows: dataSourceInfos.dataSourceInfos
+                  rows: dataSourceInfoList.dataSourceInfoList
                       .map((itemRow) => DataRow(cells: [
                             DataCell(Text(itemRow.platformId)),
                             DataCell(Text(itemRow.sensorTitle)),
@@ -124,7 +122,7 @@ class DataSourceTable extends StatelessWidget {
                                         color: Colors.blue,
                                       ), onTap: () async{
 //    if (sensor.sensorType.startsWith("RAW")) return;
-            await MotionSense.plot(itemRow.platformType, itemRow.platformId, itemRow.sensorType);
+            await MotionSenseLib.plot(itemRow.platformType, itemRow.platformId, itemRow.sensorType);
                             }),
                            ]))
                       .toList(),
