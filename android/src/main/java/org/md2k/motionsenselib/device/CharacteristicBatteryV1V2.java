@@ -27,6 +27,9 @@ package org.md2k.motionsenselib.device;
 
 import com.polidea.rxandroidble2.RxBleConnection;
 
+import org.md2k.motionsenselib.log.MyLog;
+
+import java.util.ArrayList;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -35,15 +38,26 @@ import io.reactivex.functions.Function;
 public class CharacteristicBatteryV1V2 extends Characteristics {
     private static final UUID CHARACTERISTICS = UUID.fromString("00002A19-0000-1000-8000-00805f9b34fb");
 
+    public CharacteristicBatteryV1V2() {
+        super(1, false);
+    }
+
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                .flatMap((Function<byte[], Observable<Data>>) bytes -> {
-                    double[] battery = getBattery(bytes);
-                    Data data = new Data(SensorType.BATTERY, System.currentTimeMillis(), battery);
-                    return Observable.just(data);
+                .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
+                    ArrayList<Data> a = new ArrayList<>();
+                    try {
+                        double[] battery = getBattery(bytes);
+                        Data data = new Data(SensorType.BATTERY, System.currentTimeMillis(), battery);
+                        a.add(data);
+                    } catch (Exception e) {
+                        MyLog.error(this.getClass().getName(), "listen()", "packet exception: " + e.getMessage());
+                    }
+                    return Observable.just(a);
                 });
     }
+
     private double[] getBattery(byte[] bytes) {
         double[] sample = new double[1];
         sample[0] = bytes[0];

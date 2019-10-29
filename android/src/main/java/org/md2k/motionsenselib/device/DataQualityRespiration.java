@@ -1,16 +1,12 @@
 package org.md2k.motionsenselib.device;
 
 
-import android.util.Log;
-
 import org.md2k.motionsenselib.log.MyLog;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Timed;
 
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
@@ -38,8 +34,8 @@ import io.reactivex.schedulers.Timed;
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-public class DataQualityAccelerometer extends DataQuality {
-    private final static float MAGNITUDE_VARIANCE_THRESHOLD = (float) 0.01;   //this threshold comes from the data we collect by placing the wrist sensor on table. It compares with the wrist accelerometer on-body from participant #11 (smoking pilot study)
+public class DataQualityRespiration extends DataQuality {
+    private final static float MAGNITUDE_VARIANCE_THRESHOLD = (float) 0.0025;   //this threshold comes from the data we collect by placing the wrist sensor on table. It compares with the wrist accelerometer on-body from participant #11 (smoking pilot study)
     private static final int DELAY = 3000;
     private ArrayList<Double> samples=new ArrayList<>();
 
@@ -50,14 +46,14 @@ public class DataQualityAccelerometer extends DataQuality {
         return Observable.interval(DELAY-timestamp%DELAY, DELAY, TimeUnit.MILLISECONDS).timeInterval().map(longTimed -> {
             DataQualityType dataQualityType = getStatus();
             samples.clear();
-            return new Data(SensorType.ACCELEROMETER_DATA_QUALITY, (System.currentTimeMillis()/DELAY)*DELAY, new double[]{dataQualityType.getValue()});
+            return new Data(SensorType.RESPIRATION_DATA_QUALITY, (System.currentTimeMillis()/DELAY)*DELAY, new double[]{dataQualityType.getValue()});
         });
     }
 
     @Override
     protected void addSample(Data data){
         try {
-            if (data.getSensorType() == SensorType.ACCELEROMETER) {
+            if (data.getSensorType() == SensorType.RESPIRATION) {
                 double[] res = data.getSample();
                 samples.add(res[0]);
             }

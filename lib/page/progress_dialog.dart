@@ -12,9 +12,9 @@ ProgressDialogType _progressDialogType;
 bool _barrierDismissible = true;
 
 TextStyle _progressTextStyle = TextStyle(
-    color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
+    color: Colors.black, fontSize: 12.0, fontWeight: FontWeight.w400),
     _messageStyle = TextStyle(
-        color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600);
+        color: Colors.black, fontSize: 14.0, fontWeight: FontWeight.w600);
 
 double _dialogElevation = 8.0, _borderRadius = 8.0;
 Color _backgroundColor = Colors.white;
@@ -155,12 +155,14 @@ class _BodyState extends State<_Body> {
 
   @override
   void dispose() {
-    _isShowing = false;
-    debugPrint('ProgressDialog dismissed by back button');
-    if (Navigator.of(_dismissingContext).canPop()) {
-      try {
-        Navigator.of(_dismissingContext).pop();
-      } catch (_) {}
+    if(_isShowing) {
+      _isShowing = false;
+      debugPrint('ProgressDialog dismissed by back button');
+      if (Navigator.of(context).canPop()) {
+        try {
+          Navigator.of(context).pop();
+        } catch (_) {}
+      }
     }
     super.dispose();
   }

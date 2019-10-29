@@ -49,6 +49,10 @@ public enum SensorType {
     PPG_FILTERED,
     PPG_DC,
     PPG_DC_SEQUENCE_NUMBER,
-    PPG_DC_RAW;
+    PPG_DC_RAW,
 
+    RESPIRATION,
+    ECG,
+    RESPIRATION_DATA_QUALITY,
+    ECG_DATA_QUALITY,
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:motionsenselib/settings/device_settings.dart';
 
 class SettingsDetailsPage extends StatefulWidget {
@@ -49,55 +50,83 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Container(
-              color: Theme.of(context).highlightColor,
+              color: Theme.of(context).backgroundColor,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(10.0),
                 child: Center(
                   child: Text("Device Info",
-                      style: Theme.of(context).textTheme.subtitle),
+                      style: Theme.of(context).textTheme.body2),
                 ),
               ),
             ),
             new ListTile(
-              dense: true,
-              title: new Text("Device", style: TextStyle(fontSize: 12)),
-              trailing: new Text(deviceSettings.name,
-                  style: TextStyle(fontSize: 12, color: Colors.green)),
+              title: new Text("Device"),
+              trailing: new Text(deviceSettings.getName()),
             ),
             new ListTile(
-              dense: true,
-              title: new Text("ID", style: TextStyle(fontSize: 12)),
-              trailing: new Text(deviceSettings.deviceId,
-                  style: TextStyle(fontSize: 12, color: Colors.green)),
+              title: new Text("ID"),
+              trailing: new Text(deviceSettings.deviceId)
             ),
             new ListTile(
-              dense: true,
-              title: new Text("Version", style: TextStyle(fontSize: 12)),
-              trailing: new Text(deviceSettings.version,
-                  style: TextStyle(fontSize: 12, color: Colors.green)),
+              title: new Text("Version"),
+              trailing: new Text(deviceSettings.version),
             ),
             new ListTile(
-              dense: true,
-              title: new Text("Placement", style: TextStyle(fontSize: 12)),
-              trailing: new Text(deviceSettings.platformId,
-                  style: TextStyle(fontSize: 12, color: Colors.green)),
+              title: new Text("Placement"),
+              trailing: new Text(deviceSettings.platformId)
             ),
             Container(
-              color: Theme.of(context).highlightColor,
+              color: Theme.of(context).backgroundColor,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Text("Sensor Configuration",
-                      style: Theme.of(context).textTheme.subtitle),
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+//                    Expanded(child: Container()),
+              Expanded(child: Center(child: Text("Sensor Configuration",
+                        style: Theme.of(context).textTheme.body2))),
+              new GestureDetector(onTap: (){
+                deviceSettings.setToDefault(defaultDeviceSettings);
+                isEdit = true;
+                setState(() {});
+
+              },child: Icon(MaterialCommunityIcons.getIconData("undo-variant"), color: Theme.of(context).iconTheme.color,)),
+/*
+              new OutlineButton(
+                padding: EdgeInsets.all(0),
+                      shape: new RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(2.0)),
+                      onPressed: () {
+                        deviceSettings.setToDefault(defaultDeviceSettings);
+                        isEdit = true;
+                        setState(() {});
+                      },
+                      child: new Text("DEFAULT",
+                          style: Theme.of(context).textTheme.body2),
+                    ),
+*/
+                  ],
                 ),
               ),
             ),
+            createMinConnectionIntervalWidget(),
+            createAclGyroWidget(),
+            createPPGWidget(),
+            createMagnetometerWidget(),
+/*
             ListTile(
               dense: true,
-              leading: Text(
-                "Set Configuration",
-                style: TextStyle(fontSize: 12),
+              title: GestureDetector(child:
+              Text("Set to default",),
+                onTap: (){
+                  deviceSettings.setToDefault(defaultDeviceSettings);
+                  isEdit = true;
+                  setState(() {});
+
+                },
               ),
+*/
+/*
               trailing: new OutlineButton(
                 color: Colors.green,
                 shape: new RoundedRectangleBorder(
@@ -107,13 +136,11 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                   isEdit = true;
                   setState(() {});
                 },
-                child: new Text("Default", style: TextStyle(fontSize: 12)),
+                child: new Text("DEFAULT", style: Theme.of(context).textTheme.caption),
               ),
-            ),
-            createMinConnectionIntervalWidget(),
-            createAclGyroWidget(),
-            createPPGWidget(),
-            createMagnetometerWidget(),
+*/
+//            ),
+
 //            createSaveRawData(),
           ],
         ),
@@ -128,7 +155,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
       case "MOTION_SENSE_HRV_PLUS":
         return "Acl/Quaternion/PPG Sampling Rate";
       default:
-        return "Accelerometer/Gyroscope Sampling Rate";
+        return "Acl/Gyro Sampling Rate";
     }
   }
 
@@ -136,45 +163,42 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
     return Column(
       children: <Widget>[
         ListTile(
-          dense: true,
-          leading: Text(
+
+          title: Text(
             _getMotionSensorText(),
-            style: TextStyle(fontSize: 12),
           ),
           trailing: deviceSettings.isVersion2()
               ? new DropdownButton<double>(
-                  style: TextStyle(color: Colors.black, fontSize: 12),
+                  style: TextStyle(color: Colors.black),
                   items: <double>[25, 50, 62.5, 125, 250].map((double value) {
                     return new DropdownMenuItem<double>(
                       value: value,
-                      child: new Text('$value Hz'),
+                      child: new Text('$value Hz', style: Theme.of(context).textTheme.body1,),
                     );
                   }).toList(),
-                  value: deviceSettings.accelerometerSampleRate,
+                  value: deviceSettings.characteristicMotionSampleRate,
                   onChanged: (double value) {
-                    if (deviceSettings.accelerometerSampleRate != value) {
-                      deviceSettings.setAccelerometerSampleRate(value);
+                    if (deviceSettings.characteristicMotionSampleRate != value) {
+                      deviceSettings.setCharacteristicMotionSampleRate(value);
                       isEdit = true;
                       setState(() {});
                     }
                   },
                 )
-              : Text(deviceSettings.accelerometerSampleRate.toString() + " Hz",
-                  style: TextStyle(fontSize: 12)),
+              : Text(deviceSettings.characteristicMotionSampleRate.toString() + " Hz", style: Theme.of(context).textTheme.body1,),
         ),
         deviceSettings.isVersion2()
             ? ListTile(
-                dense: true,
-                leading: Text(
+
+                title: Text(
                   "Accelerometer Sensitivity",
-                  style: TextStyle(fontSize: 12),
                 ),
                 trailing: new DropdownButton<int>(
-                    style: TextStyle(color: Colors.black, fontSize: 12),
+                    style: TextStyle(color: Colors.black),
                     items: <int>[2, 4, 8, 16].map((int value) {
                       return new DropdownMenuItem<int>(
                         value: value,
-                        child: new Text('\u00b1${value}g'),
+                        child: new Text('\u00b1${value}g', style: Theme.of(context).textTheme.body1,),
                       );
                     }).toList(),
                     value: deviceSettings.accelerometerSensitivity,
@@ -189,17 +213,16 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
             : Container(),
         deviceSettings.isVersion2()
             ? ListTile(
-                dense: true,
-                leading: Text(
+
+                title: Text(
                   "Gyroscope Sensitivity",
-                  style: TextStyle(fontSize: 12),
                 ),
                 trailing: new DropdownButton<int>(
-                  style: TextStyle(color: Colors.black, fontSize: 12),
+                  style: TextStyle(color: Colors.black),
                   items: <int>[250, 500, 1000, 2000].map((int value) {
                     return new DropdownMenuItem<int>(
                       value: value,
-                      child: new Text('\u00b1$value dps'),
+                      child: new Text('\u00b1$value dps', style: Theme.of(context).textTheme.body1,),
                     );
                   }).toList(),
                   value: deviceSettings.gyroscopeSensitivity,
@@ -222,45 +245,39 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
       children: <Widget>[
         deviceSettings.isVersion2() && !deviceSettings.isMotionSense()
             ? ListTile(
-                dense: true,
-                leading: Text(
+
+                title: Text(
                   "PPG Sampling Rate",
-                  style: TextStyle(fontSize: 12),
                 ),
                 trailing: deviceSettings.isVersion2()
                     ? new DropdownButton<double>(
-                        style: TextStyle(color: Colors.black, fontSize: 12),
+                        style: TextStyle(color: Colors.black),
                         items: <double>[25, 50].map((double value) {
                           return new DropdownMenuItem<double>(
                             value: value,
-                            child: new Text('$value Hz'),
+                            child: new Text('$value Hz', style: Theme.of(context).textTheme.body1,),
                           );
                         }).toList(),
-                        value: deviceSettings.ppgSampleRate,
+                        value: deviceSettings.characteristicPpgSampleRate,
                         onChanged: (double value) {
-                          if (deviceSettings.ppgSampleRate != value) {
-                            deviceSettings.setPpgSampleRate(value);
+                          if (deviceSettings.characteristicPpgSampleRate != value) {
+                            deviceSettings.setCharacteristicPpgSampleRate(value);
                             isEdit = true;
                             setState(() {});
                           }
                         },
                       )
                     : Text(
-                        deviceSettings.ppgSampleRate.toString() + " Hz",
-                        style: TextStyle(fontSize: 12),
+                        deviceSettings.characteristicPpgSampleRate.toString() + " Hz", style: Theme.of(context).textTheme.body1,
                       ),
               )
             : Container(),
         deviceSettings.isVersion2() && !deviceSettings.isMotionSense()
             ? ListTile(
-                dense: true,
+
                 title: Text(
-                  "PPG Red value",
-                  style: TextStyle(fontSize: 12, color: Colors.red),
-                ),
-                subtitle: Text(
-                  "range: 0-255",
-                  style: TextStyle(fontSize: 10, color: Colors.red),
+                  "PPG Red value (0-255)",
+                  style: TextStyle(color: Colors.red),
                 ),
                 trailing: new Container(
                   width: 60.0,
@@ -272,7 +289,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                                 offset:
                                     deviceSettings.ppgRed.toString().length))),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.red),
+                    style: TextStyle(color: Colors.red),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       int v = 0;
@@ -304,14 +321,10 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
             : Container(),
         deviceSettings.isVersion2() && !deviceSettings.isMotionSense()
             ? ListTile(
-                dense: true,
+
                 title: Text(
-                  "PPG Green brightness",
-                  style: TextStyle(fontSize: 12, color: Colors.green),
-                ),
-                subtitle: Text(
-                  "range: 0-255",
-                  style: TextStyle(fontSize: 10, color: Colors.green),
+                  "PPG Green brightness (0-255)",
+                  style: TextStyle(color: Colors.green),
                 ),
                 trailing: new Container(
                   width: 60.0,
@@ -324,7 +337,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                                     .toString()
                                     .length))),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.green),
+                    style: TextStyle(color: Colors.green),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       int v = 0;
@@ -356,14 +369,10 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
             : Container(),
         deviceSettings.isVersion2() && !deviceSettings.isMotionSense()
             ? ListTile(
-                dense: true,
+
                 title: Text(
-                  "PPG Infrared brightness",
-                  style: TextStyle(fontSize: 12, color: Colors.black45),
-                ),
-                subtitle: Text(
-                  "range: 0-255",
-                  style: TextStyle(fontSize: 10, color: Colors.black45),
+                  "PPG Infrared brightness (0-255)",
+                  style: TextStyle(color: Colors.black45),
                 ),
                 trailing: new Container(
                   width: 60.0,
@@ -376,7 +385,7 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                                     .toString()
                                     .length))),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: Colors.black45),
+                    style: TextStyle(color: Colors.black45),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       int v = 0;
@@ -408,10 +417,9 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
             : Container(),
         deviceSettings.isVersion2() && !deviceSettings.isMotionSense()
             ? ListTile(
-                dense: true,
-                leading: Text(
+
+                title: Text(
                   "Enable PPG Filter",
-                  style: TextStyle(fontSize: 12),
                 ),
                 trailing: Checkbox(
                   value: deviceSettings.ppgFilterEnable,
@@ -434,14 +442,13 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
         ? Column(
             children: <Widget>[
               ListTile(
-                dense: true,
-                leading: Text(
+
+                title: Text(
                   "Magnetometer Sampling Rate",
-                  style: TextStyle(fontSize: 12),
                 ),
                 trailing: Text(
-                    deviceSettings.magnetometerSampleRate.toString() + " Hz",
-                    style: TextStyle(fontSize: 12)),
+                  "25 Hz",
+                ),
               ),
             ],
           )
@@ -451,14 +458,9 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
   Widget createMinConnectionIntervalWidget() {
     return deviceSettings.isVersion2()
         ? ListTile(
-            dense: true,
+
             title: Text(
-              "Min. Connection Interval",
-              style: TextStyle(fontSize: 12),
-            ),
-            subtitle: Text(
-              "range: 10-120",
-              style: TextStyle(fontSize: 10),
+              "Min. Connection Interval (10-120)",
             ),
             trailing: new Container(
               width: 60.0,
@@ -471,7 +473,6 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
                                 .toString()
                                 .length))),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12),
                 keyboardType: TextInputType.number,
                 onSubmitted: (value) {
                   int v = 10;
@@ -489,30 +490,4 @@ class _SettingsDetailsPageState extends State<SettingsDetailsPage> {
           )
         : Container();
   }
-
-/*
-  Widget createSaveRawData() {
-    return ListTile(
-      dense: true,
-      leading: Text(
-        "Save Raw Data & Sequence Number",
-        style: TextStyle(fontSize: 12),
-      ),
-*/
-/*
-      trailing: Checkbox(
-        value: this.deviceSettings.getDeviceValue(id, "saveRaw") == "true"
-            ? true
-            : false,
-        onChanged: (bool newValue) {
-          this.deviceSettings.setDeviceValue(
-              id, "saveRaw", newValue.toString());
-          setState(() {});
-        },
-      ),
-*/ /*
-
-    );
-  }
-*/
 }

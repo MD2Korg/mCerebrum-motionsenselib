@@ -16,11 +16,13 @@ import org.md2k.motionsenselib.device.v2.motion_sense_hrv_plus_2_gen2.MotionSens
 import org.md2k.motionsenselib.device.v2.motion_sense_hrv_plus_2_gen2.MotionSenseHrvPlusGen2IR;
 import org.md2k.motionsenselib.device.v2.motion_sense_hrv_2.MotionSenseHrvV2;
 import org.md2k.motionsenselib.device.v2.motion_sense_2.MotionSenseV2;
+import org.md2k.motionsenselib.log.MyLog;
 import org.md2k.motionsenselib.settings.DeviceSettings;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -69,11 +71,11 @@ public abstract class Device {
 
     protected abstract Observable<RxBleConnection> setConfiguration(RxBleConnection rxBleConnection);
 
-    private Observable<Data> getSensingObservable(RxBleConnection rxBleConnection) {
+    private Observable<ArrayList<Data>> getSensingObservable(RxBleConnection rxBleConnection) {
         ArrayList<Characteristics> characteristics = createCharacteristics();
         if (characteristics.size() == 0) return Observable.empty();
         @SuppressWarnings("unchecked")
-        Observable<Data>[] observables = new Observable[characteristics.size()];
+        Observable<ArrayList<Data>>[] observables = new Observable[characteristics.size()];
         for (int i = 0; i < characteristics.size(); i++) {
             observables[i] = (characteristics.get(i).listen(rxBleConnection));
         }
@@ -110,20 +112,23 @@ public abstract class Device {
     }
 
     static Device create(RxBleClient rxBleClient, DeviceSettings deviceSettings) {
-        switch(deviceSettings.getPlatformType()){
-            case "MOTION_SENSE": return new MotionSense(rxBleClient, deviceSettings);
-            case "MOTION_SENSE_HRV":return new MotionSenseHrv(rxBleClient, deviceSettings);
-            case "MOTION_SENSE_HRV_PLUS": return new MotionSenseHrvPlus(rxBleClient, deviceSettings);
-                case "MOTION_SENSE_V2":
-                    return new MotionSenseV2(rxBleClient, deviceSettings);
-                case "MOTION_SENSE_HRV_V2":
-                    return new MotionSenseHrvV2(rxBleClient, deviceSettings);
-                case "MOTION_SENSE_HRV_PLUS_V2":
-                    return new MotionSenseHrvPlusV2(rxBleClient, deviceSettings);
-                case "MOTION_SENSE_HRV_PLUS_GEN2_GREEN":
-                    return new MotionSenseHrvPlusGen2IG(rxBleClient, deviceSettings);
-                case "MOTION_SENSE_HRV_PLUS_GEN2_RED":
-                    return new MotionSenseHrvPlusGen2IR(rxBleClient, deviceSettings);
+        switch (deviceSettings.getPlatformType()) {
+            case "MOTION_SENSE":
+                return new MotionSense(rxBleClient, deviceSettings);
+            case "MOTION_SENSE_HRV":
+                return new MotionSenseHrv(rxBleClient, deviceSettings);
+            case "MOTION_SENSE_HRV_PLUS":
+                return new MotionSenseHrvPlus(rxBleClient, deviceSettings);
+            case "MOTION_SENSE_V2":
+                return new MotionSenseV2(rxBleClient, deviceSettings);
+            case "MOTION_SENSE_HRV_V2":
+                return new MotionSenseHrvV2(rxBleClient, deviceSettings);
+            case "MOTION_SENSE_HRV_PLUS_V2":
+                return new MotionSenseHrvPlusV2(rxBleClient, deviceSettings);
+            case "MOTION_SENSE_HRV_PLUS_GEN2_GREEN":
+                return new MotionSenseHrvPlusGen2IG(rxBleClient, deviceSettings);
+            case "MOTION_SENSE_HRV_PLUS_GEN2_RED":
+                return new MotionSenseHrvPlusGen2IR(rxBleClient, deviceSettings);
         }
         return null;
     }
@@ -141,20 +146,47 @@ public abstract class Device {
 
 
     private void startDataQuality() {
-        dataQualityDisposable = getDataQualityObservable()
+        MyLog.info(this.getClass().getName(), "startDataQuality()", "deviceId = " + deviceSettings.getDeviceId());
+
+        dataQualityDisposable = getDataQualityObservable().map(new Function<Data, ArrayList<Data>>() {
+            @Override
+            public ArrayList<Data> apply(Data data) throws Exception {
+                ArrayList<Data> l = new ArrayList<>();
+                l.add(data);
+                return l;
+            }
+        }).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::onConnectionReceived, this::onConnectionFailure);
     }
 
     private void connect() {
         RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
-         Log.e("error", "connect (start)=>  state = "+bleDevice.getConnectionState().name());
-        if(bleDevice.getConnectionState()!= RxBleConnection.RxBleConnectionState.DISCONNECTED) return;
-        connectionDisposable = Observable.timer(3, TimeUnit.SECONDS).flatMap((Function<Long, ObservableSource<RxBleConnection>>) aLong -> bleDevice.establishConnection(false)).flatMap((Function<RxBleConnection, ObservableSource<RxBleConnection>>) this::setConfiguration).flatMap((Function<RxBleConnection, Observable<Data>>) this::getSensingObservable)
+        MyLog.info(this.getClass().getName(), "connect()", "deviceId = " + deviceSettings.getDeviceId() + " connectionStatus=" + bleDevice.getConnectionState().name());
+        if (bleDevice.getConnectionState() != RxBleConnection.RxBleConnectionState.DISCONNECTED)
+            return;
+        connectionDisposable = Observable.timer(3, TimeUnit.SECONDS).flatMap((Function<Long, ObservableSource<RxBleConnection>>) aLong -> bleDevice.establishConnection(false)).map(new Function<RxBleConnection, RxBleConnection>() {
+            @Override
+            public RxBleConnection apply(RxBleConnection rxBleConnection) throws Exception {
+                MyLog.info(this.getClass().getName(), "connect()", "deviceId = "+deviceSettings.getDeviceId()+" connectionStatus=CONNECTED");
+                return rxBleConnection;
+            }
+        }).flatMap((Function<RxBleConnection, ObservableSource<RxBleConnection>>) this::setConfiguration).flatMap((Function<RxBleConnection, Observable<ArrayList<Data>>>) this::getSensingObservable)
+                .buffer(500, TimeUnit.MILLISECONDS)
+                .map(new Function<List<ArrayList<Data>>, ArrayList<Data>>() {
+                    @Override
+                    public ArrayList<Data> apply(List<ArrayList<Data>> data) throws Exception {
+                        ArrayList<Data> arrayList = new ArrayList<>();
+                        for (int i = 0; i < data.size(); i++)
+                            arrayList.addAll(data.get(i));
+                        return arrayList;
+                    }
+                })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::onConnectionReceived, this::onConnectionFailure);
     }
-    private void initialize(){
-        for(Map.Entry<SensorType, SensorInfo> s:sensorInfoArrayList.entrySet()){
+
+    private void initialize() {
+        for (Map.Entry<SensorType, SensorInfo> s : sensorInfoArrayList.entrySet()) {
             s.getValue().setCount(0);
             s.getValue().setLastSample(null);
             s.getValue().setLastSampleTime(-1);
@@ -162,82 +194,94 @@ public abstract class Device {
 
         }
     }
+    private void connectionStatusListener(){
+        RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
+        connectionStatusDisposable = Observable.merge(Observable.just(bleDevice.getConnectionState()), bleDevice.observeConnectionStateChanges()).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(rxBleConnectionState -> {
+                    MyLog.info(this.getClass().getName(), "connectionStatusListener()", "deviceId = "+deviceSettings.getDeviceId()+" connectionStatus = "+rxBleConnectionState.name());
+
+                    if (rxBleConnectionState == RxBleConnection.RxBleConnectionState.DISCONNECTED) {
+                        reconnect();
+                    }
+
+                }, throwable -> {
+                    MyLog.info(this.getClass().getName(), "connectionStatusListener()", "deviceId = "+deviceSettings.getDeviceId()+" Exception:"+throwable.getMessage());
+                });
+
+    }
 
     void start() {
+        MyLog.info(this.getClass().getName(), "start()", "deviceId = " + deviceSettings.getDeviceId() + " isStarted=" + isStarted);
         if (isStarted) return;
         isStarted = true;
         initialize();
         startDataQuality();
-        RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
-        connectionStatusDisposable = Observable.merge(Observable.just(bleDevice.getConnectionState()), bleDevice.observeConnectionStateChanges()).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(rxBleConnectionState -> {
-                     Log.e("error", "ConnectionStatusListener: (onChange): status = " + rxBleConnectionState.toString());
-                    if (rxBleConnectionState == RxBleConnection.RxBleConnectionState.DISCONNECTED) {
-                        reconnect();
-                    }
-                }, throwable -> {
-                     Log.e("abc", "error=" + throwable.toString());
-
-                });
+        connectionStatusListener();
     }
 
-    private void onConnectionReceived(Data data) {
-//        data.setDeviceInfo(deviceInfo);
-        for (int i = 0; i < dataQualities.size(); i++) {
-            dataQualities.get(i).addSample(data);
-        }
-        SensorInfo sensorInfo = sensorInfoArrayList.get(data.getSensorType());
-        if(sensorInfo!=null) {
-            sensorInfo.setCount(sensorInfo.getCount() + 1);
-            sensorInfo.setLastSample(data.getSample());
-            sensorInfo.setLastSampleTime(data.getTimestamp());
-            if(sensorInfo.getStartSampleTime()<=0) sensorInfo.setStartSampleTime(data.getTimestamp());
-            else
-             Log.d("info",sensorInfo.getSensorType()+" "+(double)(sensorInfo.getCount())*1000.0/(sensorInfo.getLastSampleTime()-sensorInfo.getStartSampleTime()));
-        }
-        Log.d("abc","receiveCallback = "+receiveCallbacks.size());
+    private void onConnectionReceived(ArrayList<Data> d) {
+        Data data;
 
+        for (int x = 0; x < d.size(); x++) {
+            data = d.get(x);
+            for (int i = 0; i < dataQualities.size(); i++) {
+                dataQualities.get(i).addSample(data);
+            }
+            SensorInfo sensorInfo = sensorInfoArrayList.get(data.getSensorType());
+            if (sensorInfo != null) {
+                sensorInfo.setCount(sensorInfo.getCount() + 1);
+                sensorInfo.setLastSample(data.getSample());
+                sensorInfo.setLastSampleTime(data.getTimestamp());
+                if (sensorInfo.getStartSampleTime() <= 0)
+                    sensorInfo.setStartSampleTime(data.getTimestamp());
+            }
+        }
         for (ReceiveCallback receiveCallback : receiveCallbacks) {
             try {
-                receiveCallback.onReceive(data);
+                receiveCallback.onReceive(d);
             } catch (Exception e) {
-                 Log.e("abc","onConnectionReceive: exception can't send data="+e.getMessage());
+                MyLog.error(this.getClass().getName(), "onConnectionReceived()", "deviceId = " + deviceSettings.getDeviceId() + " Exception=" +e.getMessage());
                 receiveCallbacks.remove(receiveCallback);
             }
         }
     }
+    private void onConnectionFailure(Throwable throwable) {
+        MyLog.error(this.getClass().getName(), "onConnectionFailure()", "deviceId = " + deviceSettings.getDeviceId() + " Exception=" +throwable.toString());
+/*
+        if (dataQualityDisposable != null && !dataQualityDisposable.isDisposed())
+            dataQualityDisposable.dispose();
+        dataQualityDisposable = null;
+        startDataQuality();
+        reconnect();
+*/
+    }
 
     private void reconnect() {
         RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
-         Log.e("error", "reconnect (start)=>  state = "+bleDevice.getConnectionState().name());
-        if(bleDevice.getConnectionState()!= RxBleConnection.RxBleConnectionState.DISCONNECTED)
+        MyLog.info(this.getClass().getName(), "reconnect()", "deviceId = " + deviceSettings.getDeviceId() + " connectionStatus=" + bleDevice.getConnectionState().name());
+        if (bleDevice.getConnectionState() != RxBleConnection.RxBleConnectionState.DISCONNECTED)
             disconnect();
-        else if(bleDevice.getConnectionState()== RxBleConnection.RxBleConnectionState.DISCONNECTED)
+        else if (bleDevice.getConnectionState() == RxBleConnection.RxBleConnectionState.DISCONNECTED)
             connect();
-        else  Log.e("error", "inside reconnect => ble is not disconnected. state = "+bleDevice.getConnectionState().name());
+        else
+            MyLog.error(this.getClass().getName(), "reconnect()", "deviceId = " + deviceSettings.getDeviceId() + " connectionStatus=" + bleDevice.getConnectionState().name()+" nothing to do");
     }
 
-    private void onConnectionFailure(Throwable throwable) {
-         Log.e("error", "onConnectionFailure: " + throwable.getMessage());
-        reconnect();
-    }
 
     private void disconnect() {
-         Log.d("abc", "disconnecting...");
         RxBleDevice bleDevice = rxBleClient.getBleDevice(deviceSettings.getDeviceId());
-         Log.e("error", "disconnect (start)=>  state = "+bleDevice.getConnectionState().name());
-        if(bleDevice.getConnectionState()== RxBleConnection.RxBleConnectionState.DISCONNECTED)
+        MyLog.info(this.getClass().getName(), "disconnect()", "deviceId = " + deviceSettings.getDeviceId() + "connectionStatus=" + bleDevice.getConnectionState().name());
+        if (bleDevice.getConnectionState() == RxBleConnection.RxBleConnectionState.DISCONNECTED)
             return;
-        if(connectionDisposable==null) return;
+        if (connectionDisposable == null) return;
         try {
             if (!connectionDisposable.isDisposed()) {
                 connectionDisposable.dispose();
             }
-        }catch (Exception e){
-             Log.e("abc", connectionDisposable.isDisposed() ?"not disposed": "null message=" + e.getMessage());
+        } catch (Exception e) {
+            MyLog.error(this.getClass().getName(), "disconnect()", "deviceId = " + deviceSettings.getDeviceId() + " Exception = " + e.getMessage());
         }
         connectionDisposable = null;
-         Log.e("error", "disconnect (end)=>  state = "+bleDevice.getConnectionState().name());
     }
 
     public void addListener(@NonNull ReceiveCallback receiveCallback) {
@@ -250,6 +294,8 @@ public abstract class Device {
     }
 
     void stop() {
+        MyLog.info(this.getClass().getName(), "stop()", "deviceId = " + deviceSettings.getDeviceId() + " isStarted = "+isStarted);
+
         isStarted = false;
         if (connectionStatusDisposable != null && !connectionStatusDisposable.isDisposed()) {
             connectionStatusDisposable.dispose();
@@ -337,6 +383,12 @@ public abstract class Device {
     protected SensorInfo createPPGDcRawInfo(int length) {
         return SensorInfo.builder().setSensorType(SensorType.PPG_DC_RAW).setTitle("Raw (PPG DC)").setDescription("raw byte array from ppg dc characteristics").setFields(fill(length)).setUnit("number").setRange(0, 255).build();
     }
+    protected SensorInfo createRespirationInfo() {
+        return SensorInfo.builder().setSensorType(SensorType.RESPIRATION).setTitle("Respiration").setDescription("measures respiration").setFields(new Field[]{new Field("respiration", "Respiration", "Contains respiration value"),new Field("baseline", "Baseline", "Contains respiration baseline value")}).setUnit("number").setRange(-5000,5000).build();
+    }
+    protected SensorInfo createEcgInfo() {
+        return SensorInfo.builder().setSensorType(SensorType.ECG).setTitle("ECG").setDescription("measures ecg").setFields(new Field[]{new Field("ecg", "ECG", "Contains ecg value")}).setUnit("number").setRange(-5000,5000).build();
+    }
 
     private Field[] createField(String[] f) {
         Field[] filled = new Field[f.length];
@@ -349,7 +401,7 @@ public abstract class Device {
     private Field[] fill(int length) {
         Field[] filled = new Field[length];
         for (int i = 0; i < length; i++) {
-            filled[i] = new Field("byte_" + i, "Byte "+i, "Byte "+i);
+            filled[i] = new Field("byte_" + i, "Byte " + i, "Byte " + i);
         }
         return filled;
     }

@@ -29,7 +29,11 @@ package org.md2k.motionsenselib.device.v1;
 import org.md2k.motionsenselib.device.Characteristics;
 
 public abstract class CharacteristicsV1 extends Characteristics {
-    protected long correctTimeStamp(int curSequence, long curTimestamp, int lastSequenceNumber, long lastTimestamp, double frequency, int maxLimit) {
+    public CharacteristicsV1(double frequency, boolean correctTimestamp){
+        super(frequency, correctTimestamp);
+    }
+    protected long getTimestamp(int curSequence, long curTimestamp, int lastSequenceNumber, long lastTimestamp, int maxLimit) {
+        if(!correctTimestamp) return curTimestamp;
         if (lastSequenceNumber == -1)
             return curTimestamp;
         int diff = (curSequence - lastSequenceNumber + maxLimit) % maxLimit;

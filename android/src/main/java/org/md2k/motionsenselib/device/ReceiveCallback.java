@@ -1,5 +1,7 @@
 package org.md2k.motionsenselib.device;
 
+import java.util.ArrayList;
+
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
  * - Syed Monowar Hossain <monowar.hossain@gmail.com>
@@ -27,5 +29,5 @@ package org.md2k.motionsenselib.device;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 public interface ReceiveCallback {
-    void onReceive(Data d);
+    void onReceive(ArrayList<Data> d);
 }

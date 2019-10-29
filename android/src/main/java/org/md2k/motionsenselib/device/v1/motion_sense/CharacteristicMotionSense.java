@@ -2,11 +2,12 @@ package org.md2k.motionsenselib.device.v1.motion_sense;
 
 import com.polidea.rxandroidble2.RxBleConnection;
 
-import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 import org.md2k.motionsenselib.device.v1.CharacteristicsV1;
+import org.md2k.motionsenselib.log.MyLog;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -40,30 +41,34 @@ import io.reactivex.functions.Function;
 class CharacteristicMotionSense extends CharacteristicsV1 {
     private static final UUID CHARACTERISTICS = UUID.fromString("DA39C921-1D81-48E2-9C68-D0AE4BBD351F");
     private static final int MAX_SEQUENCE_NUMBER = 65536;
-    private double frequency;
+    private static final double CHARACTERISTIC_FREQUENCY =16;
 
-    CharacteristicMotionSense(double frequency) {
-        this.frequency = frequency;
+    CharacteristicMotionSense(boolean correctTimestamp) {
+        super(CHARACTERISTIC_FREQUENCY, correctTimestamp);
     }
 
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         final int[] lastSequenceNumber = {-1};
         final long[] lastCorrectedTimestamp = {-1};
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                .flatMap((Function<byte[], Observable<Data>>) bytes -> {
+                .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
                     long curTime = System.currentTimeMillis();
-                    Data[] data = new Data[5];
-                    int sequenceNumber = getSequenceNumber(bytes);
-                    long correctedTimestamp = correctTimeStamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], frequency, MAX_SEQUENCE_NUMBER);
-                    data[0] = new Data(SensorType.ACCELEROMETER, correctedTimestamp, getAccelerometer(bytes));
-                    data[1] = new Data(SensorType.GYROSCOPE, correctedTimestamp - (long) (1000.0 / (frequency * 2)), getGyroscope1(bytes));
-                    data[2] = new Data(SensorType.GYROSCOPE, correctedTimestamp, getGyroscope2(bytes));
-                    data[3] = new Data(SensorType.MOTION_RAW, curTime, getRaw(bytes));
-                    data[4] = new Data(SensorType.MOTION_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
-                    lastCorrectedTimestamp[0] = correctedTimestamp;
-                    lastSequenceNumber[0] = sequenceNumber;
-                    return Observable.fromArray(data);
+                    ArrayList<Data> data = new ArrayList<>();
+                    try {
+                        int sequenceNumber = getSequenceNumber(bytes);
+                        long timestamp = getTimestamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], MAX_SEQUENCE_NUMBER);
+                        data.add(new Data(SensorType.ACCELEROMETER, timestamp, getAccelerometer(bytes)));
+                        data.add(new Data(SensorType.GYROSCOPE, timestamp - (long) (1000.0 / (frequency * 2)), getGyroscope1(bytes)));
+                        data.add(new Data(SensorType.GYROSCOPE, timestamp, getGyroscope2(bytes)));
+                        data.add(new Data(SensorType.MOTION_RAW, curTime, getRaw(bytes)));
+                        data.add(new Data(SensorType.MOTION_SEQUENCE_NUMBER, timestamp, new double[]{sequenceNumber}));
+                        lastCorrectedTimestamp[0] = timestamp;
+                        lastSequenceNumber[0] = sequenceNumber;
+                    }catch (Exception e){
+                        MyLog.error(this.getClass().getName(), "listen()","packet exception: "+e.getMessage());
+                    }
+                    return Observable.just(data);
                 });
     }
 

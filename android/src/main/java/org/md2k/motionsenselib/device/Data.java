@@ -2,6 +2,10 @@ package org.md2k.motionsenselib.device;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.Gson;
+
+import java.util.HashMap;
+
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
  * - Syed Monowar Hossain <monowar.hossain@gmail.com>
@@ -31,9 +35,9 @@ import androidx.annotation.NonNull;
 public class Data {
     private SensorType sensorType;
     private long timestamp;
-    private Object sample;
+    private double[] sample;
 
-    public<T> Data(SensorType sensorType, long timestamp, T sample) {
+    public Data(SensorType sensorType, long timestamp, double[] sample) {
         this.sensorType = sensorType;
         this.timestamp = timestamp;
         this.sample = sample;
@@ -47,20 +51,25 @@ public class Data {
         return timestamp;
     }
 
-    public<T> T getSample() {
-        return (T) sample;
+    public double[] getSample() {
+        return  sample;
     }
 
     @NonNull
     @Override
     public String toString(){
-        String sampleStr = String.valueOf(timestamp);
-        if(sample instanceof double[]){
+        StringBuilder sampleStr = new StringBuilder(String.valueOf(timestamp));
             double[] s =getSample();
-            for(int i = 0;i<s.length;i++){
-                sampleStr+=","+ String.valueOf(s[i]);
-            }
+        for (double v : s) {
+            sampleStr.append(",").append(String.valueOf(v));
         }
         return sensorType.name()+","+sampleStr;
+    }
+    public HashMap<String, Object> toMap(){
+        HashMap<String, Object> h = new HashMap<>();
+        h.put("sensorType", sensorType.name());
+        h.put("timestamp", timestamp);
+        h.put("sample", sample);
+        return h;
     }
 }

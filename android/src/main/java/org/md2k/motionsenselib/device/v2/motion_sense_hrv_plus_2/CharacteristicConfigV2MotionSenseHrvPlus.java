@@ -49,7 +49,7 @@ class CharacteristicConfigV2MotionSenseHrvPlus extends CharacteristicConfigV2 {
                 })
                 .flatMap((Function<byte[], Single<byte[]>>) bytes -> {
                     if (deviceSettings.isPpgEnable() || deviceSettings.isAccelerometerEnable() || deviceSettings.isGyroscopeEnable())
-                        return setSamplingRateObservable(rxBleConnection, deviceSettings.getRawMotionSampleRate(), deviceSettings.getRawPpgSampleRate());
+                        return setSamplingRateObservable(rxBleConnection, deviceSettings.getCharacteristicMotionSampleRate(), deviceSettings.getCharacteristicPpgSampleRate());
                     else return Single.just(new byte[0]);
                 })
                 .flatMap((Function<byte[], Single<byte[]>>) bytes -> {

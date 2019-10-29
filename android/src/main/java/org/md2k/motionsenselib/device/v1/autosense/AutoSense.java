@@ -1,4 +1,4 @@
-package org.md2k.motionsenselib.device.v1.motion_sense_hrv;
+package org.md2k.motionsenselib.device.v1.autosense;
 
 import com.polidea.rxandroidble2.RxBleClient;
 import com.polidea.rxandroidble2.RxBleConnection;
@@ -7,11 +7,13 @@ import org.md2k.motionsenselib.device.CharacteristicBatteryV1V2;
 import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.DataQuality;
 import org.md2k.motionsenselib.device.DataQualityAccelerometer;
+import org.md2k.motionsenselib.device.DataQualityECG;
 import org.md2k.motionsenselib.device.DataQualityPPG;
+import org.md2k.motionsenselib.device.DataQualityRespiration;
 import org.md2k.motionsenselib.device.Device;
-import org.md2k.motionsenselib.settings.DeviceSettings;
 import org.md2k.motionsenselib.device.SensorInfo;
 import org.md2k.motionsenselib.device.SensorType;
+import org.md2k.motionsenselib.settings.DeviceSettings;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -21,7 +23,6 @@ import io.reactivex.Observable;
 
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
- * - Syed Monowar Hossain <monowar.hossain@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,45 +46,38 @@ import io.reactivex.Observable;
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-public class MotionSenseHrv extends Device {
+public class AutoSense extends Device {
 
-    public MotionSenseHrv(RxBleClient rxBleClient, DeviceSettings deviceSettings) {
+    public AutoSense(RxBleClient rxBleClient, DeviceSettings deviceSettings) {
         super(rxBleClient, deviceSettings);
     }
+
     @Override
     protected Observable<RxBleConnection> setConfiguration(RxBleConnection rxBleConnection) {
         return Observable.just(rxBleConnection);
     }
 
-/*
-
-    Data channels
-    --------------
-    CHARACTERISTIC_MOTION       -       ACCELEROMETER, GYROSCOPE, PPG, SEQUENCE_NUMBER, RAW
-    CHARACTERISTIC_BATTERY      -       BATTERY
-    DATA_QUALITY                -       ACCELEROMETER_DATA_QUALITY, PPG_DATA_QUALITY
-
- */
     @Override
     protected LinkedHashMap<SensorType, SensorInfo> createSensorInfo() {
         LinkedHashMap<SensorType, SensorInfo> sensorInfoArrayList = new LinkedHashMap<>();
-        if(deviceSettings.isAccelerometerEnable()) sensorInfoArrayList.put(SensorType.ACCELEROMETER, createAccelerometerInfo());
-        if(deviceSettings.isGyroscopeEnable()) sensorInfoArrayList.put(SensorType.GYROSCOPE, createGyroscopeInfo());
-        if(deviceSettings.isSequenceNumberMotionEnable()) sensorInfoArrayList.put(SensorType.MOTION_SEQUENCE_NUMBER, createMotionSequenceNumberInfo(1023));
-        if(deviceSettings.isRawMotionEnable()) sensorInfoArrayList.put(SensorType.MOTION_RAW, createMotionRawInfo(20));
-        if(deviceSettings.isAccelerometerDataQualityEnable()) sensorInfoArrayList.put(SensorType.ACCELEROMETER_DATA_QUALITY, createAccelerometerDataQualityInfo());
-        if(deviceSettings.isBatteryEnable()) sensorInfoArrayList.put(SensorType.BATTERY, createBatteryInfo());
-        if(deviceSettings.isPpgEnable()) sensorInfoArrayList.put(SensorType.PPG, createPPGInfo("measure the value of ppg (red, infrared, green)", new String[]{"red", "infrared", "green"}));
-        if(deviceSettings.isPpgDataQualityEnable()) sensorInfoArrayList.put(SensorType.PPG_DATA_QUALITY, createPPGDataQualityInfo());
+        if (deviceSettings.isAccelerometerEnable())
+            sensorInfoArrayList.put(SensorType.ACCELEROMETER, createAccelerometerInfo());
+        if (deviceSettings.isRespirationEnable())
+            sensorInfoArrayList.put(SensorType.RESPIRATION, createRespirationInfo());
+        if (deviceSettings.isEcgEnable())
+            sensorInfoArrayList.put(SensorType.ECG, createEcgInfo());
+        if (deviceSettings.isSequenceNumberMotionEnable())
+            sensorInfoArrayList.put(SensorType.MOTION_SEQUENCE_NUMBER, createMotionSequenceNumberInfo(4096));
+        if (deviceSettings.isRawMotionEnable())
+            sensorInfoArrayList.put(SensorType.MOTION_RAW, createMotionRawInfo(20));
         return sensorInfoArrayList;
     }
 
     @Override
     protected ArrayList<Characteristics> createCharacteristics() {
         ArrayList<Characteristics> characteristics = new ArrayList<>();
-
-        if (deviceSettings.isAccelerometerEnable() || deviceSettings.isGyroscopeEnable() || deviceSettings.isRawMotionEnable() || deviceSettings.isSequenceNumberMotionEnable() || deviceSettings.isAccelerometerDataQualityEnable() || deviceSettings.isPpgEnable() || deviceSettings.isPpgDataQualityEnable())
-            characteristics.add(new CharacteristicMotion(deviceSettings.isCorrectTimestamp()));
+        if (deviceSettings.isAccelerometerEnable() || deviceSettings.isRespirationEnable() || deviceSettings.isEcgEnable() || deviceSettings.isEcgDataQualityEnable() || deviceSettings.isRespirationDataQualityEnable()||deviceSettings.isRawMotionEnable()||deviceSettings.isSequenceNumberMotionEnable())
+            characteristics.add(new CharacteristicAutoSense(deviceSettings.isCorrectTimestamp()));
         if (deviceSettings.isBatteryEnable())
             characteristics.add(new CharacteristicBatteryV1V2());
         return characteristics;
@@ -92,10 +86,10 @@ public class MotionSenseHrv extends Device {
     @Override
     protected ArrayList<DataQuality> createDataQualities() {
         ArrayList<DataQuality> dataQualities = new ArrayList<>();
-        if (deviceSettings.isAccelerometerDataQualityEnable())
-            dataQualities.add(new DataQualityAccelerometer());
-        if(deviceSettings.isPpgDataQualityEnable())
-            dataQualities.add(new DataQualityPPG());
+        if (deviceSettings.isRespirationDataQualityEnable())
+            dataQualities.add(new DataQualityRespiration());
+        if (deviceSettings.isEcgDataQualityEnable())
+            dataQualities.add(new DataQualityECG());
         return dataQualities;
     }
 }

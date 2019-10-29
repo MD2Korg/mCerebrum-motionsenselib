@@ -8,7 +8,7 @@ import 'data/summary.dart';
 
 class MotionSenseLib {
   static const MethodChannel _channel = const MethodChannel('org.md2k.motionsenselib.channel');
-  static const EventChannel _sensorDataEventChannel = EventChannel('org.md2k.motionsenselib.eventchannel.sensordata');
+  static const EventChannel _eventChannelSensorData = EventChannel('org.md2k.motionsenselib.eventchannel.sensordata');
   static const _SET_SETTINGS = 'SET_SETTINGS';
   static const _GET_SUMMARY = 'GET_SUMMARY';
   static const _BACKGROUND_SERVICE = 'BACKGROUND_SERVICE';
@@ -37,17 +37,12 @@ class MotionSenseLib {
     final res = await _channel.invokeMethod(_PLOT, {"platformType":platformType, "platformId": platformId,"sensorType": sensorType});
     return res;
   }
-  static Stream<String> _events;
+  static Stream<dynamic> _events;
 
-  static Stream<String> get listenSensorData {
+  static Stream<dynamic> get listenSensorData {
     if (_events == null) {
-      _events = _sensorDataEventChannel
-          .receiveBroadcastStream()
-          .map(
-              (dynamic event) {
-                print("event");
-            return "a";
-          });
+      _events = _eventChannelSensorData
+          .receiveBroadcastStream();
     }
     return _events;
   }

@@ -14,6 +14,8 @@ import org.md2k.motionsenselib.device.Device;
 import org.md2k.motionsenselib.device.MotionSenseManager;
 import org.md2k.motionsenselib.device.ReceiveCallback;
 import org.md2k.motionsenselib.device.SensorInfo;
+import org.md2k.motionsenselib.log.MyLog;
+import org.md2k.motionsenselib.log.ReceiveLogCallback;
 import org.md2k.motionsenselib.plot.ActivityPlot;
 import org.md2k.motionsenselib.settings.Settings;
 import org.md2k.motionsenselib.summary.Summary;
@@ -32,7 +34,7 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
 /**
  * MotionSenseLibPlugin
  */
-public class MotionSenseLibPlugin implements MethodCallHandler, EventChannel.StreamHandler {
+public class MotionSenseLibPlugin implements MethodCallHandler {
     private static final String SET_SETTING = "SET_SETTINGS";
     private static final String GET_SUMMARY = "GET_SUMMARY";
     private static final String BACKGROUND_SERVICE = "BACKGROUND_SERVICE";
@@ -41,12 +43,10 @@ public class MotionSenseLibPlugin implements MethodCallHandler, EventChannel.Str
     private Activity activity;
 
     private static final String EVENT_CHANNEL_SENSOR_DATA = "org.md2k.motionsenselib.eventchannel.sensordata";
-
-    /**
-     * Plugin registration.
-     */
+    private static final String EVENT_CHANNEL_LOG = "org.md2k.motionsenselib.eventchannel.log";
 
     public static void registerWith(Registrar registrar) {
+        MyLog.init();
         MotionSenseManager.init(registrar.context());
         MotionSenseLibPlugin motionSensePlugin = new MotionSenseLibPlugin();
         motionSensePlugin.activity = registrar.activity();
@@ -54,49 +54,109 @@ public class MotionSenseLibPlugin implements MethodCallHandler, EventChannel.Str
         channel.setMethodCallHandler(motionSensePlugin);
         final EventChannel eventChannelSensorData =
                 new EventChannel(registrar.messenger(), EVENT_CHANNEL_SENSOR_DATA);
-        eventChannelSensorData.setStreamHandler(
-                new MotionSenseLibPlugin());
-    }
+        final EventChannel eventChannelLog =
+                new EventChannel(registrar.messenger(), EVENT_CHANNEL_LOG);
+        eventChannelLog.setStreamHandler(new EventChannel.StreamHandler() {
 
-    private HashMap<String, ReceiveCallback> receiveCallbacks = new HashMap<>();
+            @Override
+            public void onListen(Object o, EventChannel.EventSink eventSink) {
+                ReceiveLogCallback receiveLogCallback = new ReceiveLogCallback() {
+                    @Override
+                    public void onReceive(String logType, String className, String methodName, String message) {
+                        eventSink.success(new String[]{logType, className, methodName, message});
+                    }
+                };
+                MyLog.setCallback(receiveLogCallback);
+            }
 
-    @Override
-    public void onListen(Object arguments, EventChannel.EventSink events) {
-        Log.d("abc", "sensor data listen onListen..device="+MotionSenseManager.getDevices().size());
-        for(int i=0;i<MotionSenseManager.getDevices().size();i++){
-            Device device = MotionSenseManager.getDevices().get(i);
-            ReceiveCallback receiveCallback = new ReceiveCallback() {
-                @Override
-                public void onReceive(Data d) {
-                    Log.d("abc","motionsenselib received "+d.getSensorType().toString());
-/*
-                    HashMap<String, String> hashMap=new HashMap<>();
-                    hashMap.put("deviceId",device.getDeviceSettings().getDeviceId());
-                    hashMap.put("sensorType", d.getSensorType().toString());
-*/
-//                    hashMap.put("timestamp", d.getTimestamp());
-//                    hashMap.put("sample", d.getSample());
-/*
-                            String sensorType = d.getSensorType().toString();
-                    long timestamp = d.getTimestamp();
-                    double[] data = d.getSample();
-                    String deviceId = device.getDeviceSettings().getDeviceId();
-*/
-                    events.success("a");
+            @Override
+            public void onCancel(Object o) {
+                MyLog.setCallback(null);
+            }
+        });
+
+        eventChannelSensorData.setStreamHandler(new EventChannel.StreamHandler() {
+            private HashMap<String, ReceiveCallback> receiveCallbacks = new HashMap<>();
+
+            @Override
+            public void onListen(Object o, EventChannel.EventSink eventSink) {
+//                Log.d("abc", "sensor data listen onListen..device=" + MotionSenseManager.getDevices().size());
+                for (int i = 0; i < MotionSenseManager.getDevices().size(); i++) {
+                    Device device = MotionSenseManager.getDevices().get(i);
+                    ReceiveCallback receiveCallback = new ReceiveCallback() {
+                        @Override
+                        public void onReceive(ArrayList<Data> d) {
+//                            Log.d("abc", "motionsenselib received size="+d.size());
+                            ArrayList<HashMap<String, Object>> list = new ArrayList<>();
+                            for(int i=0;i<d.size();i++){
+                                HashMap<String, Object> r = d.get(i).toMap();
+                                r.put("deviceId", device.getDeviceSettings().getDeviceId());
+                                list.add(r);
+                            }
+                            eventSink.success(list);
+                        }
+                    };
+                    device.addListener(receiveCallback);
+                    receiveCallbacks.put(device.getDeviceSettings().getDeviceId(), receiveCallback);
                 }
-            };
-            device.addListener(receiveCallback);
-            receiveCallbacks.put(device.getDeviceSettings().getDeviceId(), receiveCallback);
-        }
+
+            }
+
+            @Override
+            public void onCancel(Object o) {
+
+                for(Map.Entry<String, ReceiveCallback> r: receiveCallbacks.entrySet()){
+                    Device d = MotionSenseManager.getDevice(r.getKey());
+                    if(d!=null)
+                        d.removeListener(r.getValue());
+                }
+                receiveCallbacks.clear();
+
+
+            }
+        });
+        eventChannelLog.setStreamHandler(new EventChannel.StreamHandler() {
+            private HashMap<String, ReceiveCallback> receiveCallbacks = new HashMap<>();
+
+            @Override
+            public void onListen(Object o, EventChannel.EventSink eventSink) {
+//                Log.d("abc", "sensor data listen onListen..device=" + MotionSenseManager.getDevices().size());
+/*
+                for (int i = 0; i < MotionSenseManager.getDevices().size(); i++) {
+                    Device device = MotionSenseManager.getDevices().get(i);
+                    ReceiveCallback receiveCallback = new ReceiveCallback() {
+                        @Override
+                        public void onReceive(ArrayList<Data> d) {
+                            Log.d("abc", "motionsenselib received size="+d.size());
+                            ArrayList<HashMap<String, Object>> list = new ArrayList<>();
+                            for(int i=0;i<d.size();i++){
+                                HashMap<String, Object> r = d.get(i).toMap();
+                                r.put("deviceId", device.getDeviceSettings().getDeviceId());
+                                list.add(r);
+                            }
+                            eventSink.success(list);
+                        }
+                    };
+                    device.addListener(receiveCallback);
+                    receiveCallbacks.put(device.getDeviceSettings().getDeviceId(), receiveCallback);
+                }
+*/
+
+            }
+
+            @Override
+            public void onCancel(Object o) {
+/*
+                for(Map.Entry<String, ReceiveCallback> r: receiveCallbacks.entrySet()){
+                    MotionSenseManager.getDevice(r.getKey()).removeListener(r.getValue());
+                }
+                receiveCallbacks.clear();
+*/
+
+            }
+        });
     }
 
-    @Override
-    public void onCancel(Object arguments) {
-        for(Map.Entry<String, ReceiveCallback> r: receiveCallbacks.entrySet()){
-            MotionSenseManager.getDevice(r.getKey()).removeListener(r.getValue());
-        }
-        receiveCallbacks.clear();
-    }
 
     @Override
     public void onMethodCall(MethodCall call, @NonNull Result result) {

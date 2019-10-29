@@ -27,11 +27,12 @@ package org.md2k.motionsenselib.device.v1.motion_sense_hrv_plus;
 
 import com.polidea.rxandroidble2.RxBleConnection;
 
-import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 import org.md2k.motionsenselib.device.v1.CharacteristicsV1;
+import org.md2k.motionsenselib.log.MyLog;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -40,45 +41,50 @@ import io.reactivex.functions.Function;
 class CharacteristicMotion extends CharacteristicsV1 {
     private static final UUID CHARACTERISTICS = UUID.fromString("da39c921-1d81-48e2-9c68-d0ae4bbd351f");
     private static final int MAX_SEQUENCE_NUMBER = 1024;
-    private double frequency;
+    private static final double CHARACTERISTIC_FREQUENCY=25;
 
-    CharacteristicMotion(double frequency) {
-        this.frequency = frequency;
+    CharacteristicMotion(boolean correctTimestamp) {
+        super(CHARACTERISTIC_FREQUENCY, correctTimestamp);
     }
 
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         final int[] lastSequenceNumber = {-1};
         final long[] lastCorrectedTimestamp = {-1};
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                .flatMap((Function<byte[], Observable<Data>>) bytes -> {
+                .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
                     long curTime = System.currentTimeMillis();
-                    int sequenceNumber = getSequenceNumber(bytes);
-                    long correctedTimestamp = correctTimeStamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], frequency, MAX_SEQUENCE_NUMBER);
-                    Data[] data = new Data[5];
-                    data[0] = new Data(SensorType.ACCELEROMETER, correctedTimestamp, getAccelerometer(bytes));
-                    data[1] = new Data(SensorType.QUATERNION, correctedTimestamp, getQuaternion(bytes));
-                    data[2] = new Data(SensorType.PPG, correctedTimestamp, getPPG(bytes));
-                    data[3] = new Data(SensorType.MOTION_RAW, curTime, getRaw(bytes));
-                    data[4] = new Data(SensorType.MOTION_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
-                    lastCorrectedTimestamp[0] = correctedTimestamp;
-                    lastSequenceNumber[0] = sequenceNumber;
-                    return Observable.fromArray(data);
+                    ArrayList<Data> data = new ArrayList<Data>();
+                    try {
+                        int sequenceNumber = getSequenceNumber(bytes);
+                        long timestamp = getTimestamp(sequenceNumber, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], MAX_SEQUENCE_NUMBER);
+                        data.add(new Data(SensorType.ACCELEROMETER, correctTimestamp?timestamp:curTime, getAccelerometer(bytes)));
+                        data.add(new Data(SensorType.QUATERNION, correctTimestamp?timestamp:curTime, getQuaternion(bytes)));
+                        data.add(new Data(SensorType.PPG, correctTimestamp?timestamp:curTime, getPPG(bytes)));
+                        data.add(new Data(SensorType.MOTION_RAW, curTime, getRaw(bytes)));
+                        data.add(new Data(SensorType.MOTION_SEQUENCE_NUMBER, correctTimestamp?timestamp:curTime, new double[]{sequenceNumber}));
+                        lastCorrectedTimestamp[0] = timestamp;
+                        lastSequenceNumber[0] = sequenceNumber;
+                    } catch (Exception e) {
+                        MyLog.error(this.getClass().getName(), "listen()", "packet exception: " + e.getMessage());
+                    }
+                    return Observable.just(data);
                 });
     }
 
     private double[] getAccelerometer(byte[] bytes) {
         double[] sample = new double[3];
-        sample[0] = ((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff))*4.0/32768.0;
-        sample[1] = ((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff))*4.0/32768.0;
-        sample[2] = ((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff))*4.0/32768.0;
+        sample[0] = ((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff)) * 4.0 / 32768.0;
+        sample[1] = ((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff)) * 4.0 / 32768.0;
+        sample[2] = ((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff)) * 4.0 / 32768.0;
         return sample;
     }
+
     private double[] getQuaternion(byte[] bytes) {
         double[] sample = new double[3];
-        sample[0] = ((bytes[6] & 0xff) << 8 | (bytes[7] & 0xff))*2.0/65535.0-1;
-        sample[1] = ((bytes[8] & 0xff) << 8 | (bytes[9] & 0xff))*2.0/65535.0-1;
-        sample[2] = ((bytes[10] &0xff) << 8 | (bytes[11] & 0xff))*2.0/65535.0-1;
+        sample[0] = ((bytes[6] & 0xff) << 8 | (bytes[7] & 0xff)) * 2.0 / 65535.0 - 1;
+        sample[1] = ((bytes[8] & 0xff) << 8 | (bytes[9] & 0xff)) * 2.0 / 65535.0 - 1;
+        sample[2] = ((bytes[10] & 0xff) << 8 | (bytes[11] & 0xff)) * 2.0 / 65535.0 - 1;
         return sample;
     }
 
@@ -88,9 +94,9 @@ class CharacteristicMotion extends CharacteristicsV1 {
 
     private double[] getPPG(byte[] bytes) {
         double[] sample = new double[3];
-        sample[0] = ((bytes[12] & 0xff)<<10) | ((bytes[13] & 0xff) <<2) | ((bytes[14] & 0xc0)>>6);
-        sample[1] = ((bytes[14] & 0x3f)<<12) | ((bytes[15] & 0xff) <<4) | ((bytes[16] & 0xf0)>>4);
-        sample[2] = ((bytes[16] & 0x0f)<<14) | ((bytes[17] & 0xff) <<6) | ((bytes[18] & 0xfc)>>2);
+        sample[0] = ((bytes[12] & 0xff) << 10) | ((bytes[13] & 0xff) << 2) | ((bytes[14] & 0xc0) >> 6);
+        sample[1] = ((bytes[14] & 0x3f) << 12) | ((bytes[15] & 0xff) << 4) | ((bytes[16] & 0xf0) >> 4);
+        sample[2] = ((bytes[16] & 0x0f) << 14) | ((bytes[17] & 0xff) << 6) | ((bytes[18] & 0xfc) >> 2);
         return sample;
     }
 }

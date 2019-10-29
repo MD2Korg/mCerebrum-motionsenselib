@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:motionsenselib/page/main/main_page.dart';
 import 'package:motionsenselib/settings/motionsense_settings.dart';
 import 'package:motionsenselib_example/motionsenselib_example.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import 'ThemeLightTeal.dart';
 
 void main() async {
   MotionSenseSettings settings;
@@ -15,13 +20,27 @@ void main() async {
   }
 
   settings = await MotionsenselibExample.readSettings();
+  StreamSubscription<dynamic> streamSubscription;
   void callback(String action, dynamic param) async {
     switch (action) {
       case "background":
-        if (param == true)
+        if (param == true) {
           await MotionsenselibExample.saveDataStart();
-        else
+/*
+          streamSubscription = MotionSenseLib.listenSensorData.listen((onData){
+            print("onData"+onData.toString());
+          }, onDone: (){
+            print("onDone");
+          }, onError: (dynamic error){
+            print("onError="+error.toString());
+          });
+*/
+        }
+        else {
           await MotionsenselibExample.saveDataStop();
+          if (streamSubscription != null)
+            streamSubscription.cancel();
+        }
         break;
       case "settings":
         await MotionsenselibExample.saveSettings(param);
@@ -29,5 +48,10 @@ void main() async {
     }
   }
 
-  runApp(MaterialApp(home: MainPage(settings, callback)));
+  runApp(MaterialApp(
+      builder: (context, child){
+        ScreenUtil(width: 1080, height: 1980, allowFontScaling: true).init(context);
+        return new Theme(data: ThemeLightTeal.create(context), child: child);
+      },
+      home: MainPage(settings, callback)));
 }

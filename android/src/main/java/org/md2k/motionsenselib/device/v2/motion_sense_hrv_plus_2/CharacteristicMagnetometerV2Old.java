@@ -31,6 +31,7 @@ import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 import org.md2k.motionsenselib.device.v2.CharacteristicsV2;
+import org.md2k.motionsenselib.log.MyLog;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -42,40 +43,42 @@ import io.reactivex.functions.Function;
 
 class CharacteristicMagnetometerV2Old extends CharacteristicsV2 {
     private static final UUID CHARACTERISTICS = UUID.fromString("DA39C924-1D81-48E2-9C68-D0AE4BBD351F");
-    private double frequency;
+    private static final double CHARACTERISTIC_FREQUENCY=12.5;
 
-    CharacteristicMagnetometerV2Old(double frequency) {
-        this.frequency = frequency;
+    CharacteristicMagnetometerV2Old(boolean correctTimestamp) {
+        super(CHARACTERISTIC_FREQUENCY, correctTimestamp);
     }
 
 
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         final long[] lastCorrectedTimestamp = {-1};
         final int[] lastSequenceNumber = {-1};
-        return readSensitivity(rxBleConnection).flatMapObservable(new Function<int[], ObservableSource<? extends Data>>() {
+        return readSensitivity(rxBleConnection).flatMapObservable(new Function<int[], ObservableSource<? extends ArrayList<Data>>>() {
             @Override
-            public ObservableSource<? extends Data> apply(int[] ints) throws Exception {
+            public ObservableSource<? extends ArrayList<Data>> apply(int[] ints) throws Exception {
                 return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                        .flatMap((Function<byte[], Observable<Data>>) bytes -> {
+                        .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
                             long curTime = System.currentTimeMillis();
                             ArrayList<Data> data = new ArrayList<>();
-                            double[] mag1 = getMagnetometer1(bytes,ints[0], ints[1], ints[2]);
-                            double[] mag2 = getMagnetometer2(bytes,ints[0], ints[1], ints[2]);
-                            double[] rawLast = getRaw(bytes);
-                            int sequenceNumber = getSequenceNumber(bytes);
-                            double[] sequenceNumberLast = new double[]{sequenceNumber};
-                            long correctedTimestamp = correctTimeStamp(sequenceNumber, lastSequenceNumber[0], curTime, lastCorrectedTimestamp[0]);
-                            long correctTimestamp2 = (long) (correctedTimestamp - (1000.0 / (frequency * 2.0)));
-                            data.add(new Data(SensorType.MAGNETOMETER, correctedTimestamp, mag1));
-                            data.add(new Data(SensorType.MAGNETOMETER, correctTimestamp2, mag2));
-                            data.add(new Data(SensorType.MAGNETOMETER_RAW, curTime, rawLast));
-                            data.add(new Data(SensorType.MAGNETOMETER_SEQUENCE_NUMBER, correctedTimestamp, sequenceNumberLast));
-                            lastCorrectedTimestamp[0] = correctedTimestamp;
-                            lastSequenceNumber[0] = sequenceNumber;
-                            Data[] d = new Data[data.size()];
-                            data.toArray(d);
-                            return Observable.fromArray(d);
+                            try {
+                                double[] mag1 = getMagnetometer1(bytes, ints[0], ints[1], ints[2]);
+                                double[] mag2 = getMagnetometer2(bytes, ints[0], ints[1], ints[2]);
+                                double[] rawLast = getRaw(bytes);
+                                int sequenceNumber = getSequenceNumber(bytes);
+                                double[] sequenceNumberLast = new double[]{sequenceNumber};
+                                long correctedTimestamp = correctTimeStamp(sequenceNumber, lastSequenceNumber[0], curTime, lastCorrectedTimestamp[0]);
+                                long correctTimestamp2 = (long) (correctedTimestamp - (1000.0 / (frequency * 2.0)));
+                                data.add(new Data(SensorType.MAGNETOMETER, correctedTimestamp, mag1));
+                                data.add(new Data(SensorType.MAGNETOMETER, correctTimestamp2, mag2));
+                                data.add(new Data(SensorType.MAGNETOMETER_RAW, curTime, rawLast));
+                                data.add(new Data(SensorType.MAGNETOMETER_SEQUENCE_NUMBER, correctedTimestamp, sequenceNumberLast));
+                                lastCorrectedTimestamp[0] = correctedTimestamp;
+                                lastSequenceNumber[0] = sequenceNumber;
+                            } catch (Exception e) {
+                                MyLog.error(this.getClass().getName(), "listen()", "packet exception: " + e.getMessage());
+                            }
+                            return Observable.just(data);
                         });
             }
         });
@@ -98,7 +101,7 @@ class CharacteristicMagnetometerV2Old extends CharacteristicsV2 {
     }
 
     private double convertADCtoSI(double mag, int sensitivity) {
-        return mag * (0.5*(sensitivity-128.0)/128.0+1);
+        return mag * (0.5 * (sensitivity - 128.0) / 128.0 + 1);
     }
 
     private int getSequenceNumber(byte[] data) {
@@ -111,9 +114,9 @@ class CharacteristicMagnetometerV2Old extends CharacteristicsV2 {
             @Override
             public int[] apply(byte[] bytes) throws Exception {
                 int[] sensitivity = new int[3];
-                sensitivity[0]=(((int)bytes[2]) & 0xff);
-                sensitivity[1]=(((int)bytes[1]) & 0xff);
-                sensitivity[2]=(((int)bytes[0]) & 0xff);
+                sensitivity[0] = (((int) bytes[2]) & 0xff);
+                sensitivity[1] = (((int) bytes[1]) & 0xff);
+                sensitivity[2] = (((int) bytes[0]) & 0xff);
                 return sensitivity;
             }
         });

@@ -53,6 +53,16 @@ public class MotionSenseHrvPlus extends Device {
     protected Observable<RxBleConnection> setConfiguration(RxBleConnection rxBleConnection) {
         return Observable.just(rxBleConnection);
     }
+/*
+
+    Data channels
+    --------------
+    CHARACTERISTIC_MOTION       -       ACCELEROMETER, QUATERNION, PPG, SEQUENCE_NUMBER, RAW
+    CHARACTERISTIC_BATTERY      -       BATTERY
+    CHARACTERISTIC_MAGNETOMETER -       MAGNETOMETER, MAGNETOMETER_SENSITIVITY, SEQUENCE_NUMBER, RAW
+    DATA_QUALITY                -       ACCELEROMETER_DATA_QUALITY, PPG_DATA_QUALITY
+
+ */
 
     @Override
     protected LinkedHashMap<SensorType, SensorInfo> createSensorInfo() {
@@ -75,12 +85,13 @@ public class MotionSenseHrvPlus extends Device {
     @Override
     protected ArrayList<Characteristics> createCharacteristics() {
         ArrayList<Characteristics> characteristics = new ArrayList<>();
+
         if (deviceSettings.isAccelerometerEnable() || deviceSettings.isQuaternionEnable() || deviceSettings.isRawMotionEnable() || deviceSettings.isSequenceNumberMotionEnable() || deviceSettings.isAccelerometerDataQualityEnable() || deviceSettings.isPpgEnable() || deviceSettings.isPpgDataQualityEnable())
-            characteristics.add(new CharacteristicMotion(deviceSettings.getRawMotionSampleRate()));
+            characteristics.add(new CharacteristicMotion(deviceSettings.isCorrectTimestamp()));
         if (deviceSettings.isBatteryEnable())
             characteristics.add(new CharacteristicBatteryV1V2());
         if(deviceSettings.isMagnetometerEnable() || deviceSettings.isMagnetometerSensitivityEnable() || deviceSettings.isRawMagnetometerEnable()||deviceSettings.isSequenceNumberMagnetometerEnable())
-            characteristics.add(new CharacteristicMagnetometer(deviceSettings.getRawMagnetometerSampleRate()));
+            characteristics.add(new CharacteristicMagnetometer(deviceSettings.isCorrectTimestamp()));
         return characteristics;
     }
 

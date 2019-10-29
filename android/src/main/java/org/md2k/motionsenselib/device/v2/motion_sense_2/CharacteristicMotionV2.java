@@ -6,7 +6,9 @@ import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 import org.md2k.motionsenselib.device.v2.CharacteristicsV2;
+import org.md2k.motionsenselib.log.MyLog;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -42,50 +44,53 @@ class CharacteristicMotionV2 extends CharacteristicsV2 {
 
     private int accelerometerSensitivity;
     private int gyroscopeSensitivity;
-    private double frequency;
 
-    public CharacteristicMotionV2(double frequency, int accelerometerSensitivity, int gyroscopeSensitivity) {
-        this.frequency = frequency;
+    CharacteristicMotionV2(double frequency, boolean correctTimestamp, int accelerometerSensitivity, int gyroscopeSensitivity) {
+        super(frequency, correctTimestamp);
         this.accelerometerSensitivity = accelerometerSensitivity;
         this.gyroscopeSensitivity = gyroscopeSensitivity;
     }
 
 
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         final int[] lastSequenceNumber = {-1};
         final long[] lastCorrectedTimestamp = {-1};
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                .flatMap((Function<byte[], Observable<Data>>) bytes -> {
+                .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
                     long curTime = System.currentTimeMillis();
-                    Data[] data = new Data[4];
-                    int sequenceNumber = getSequenceNumber(bytes);
-                    long correctTimeStamp = correctTimeStamp(sequenceNumber, lastSequenceNumber[0], curTime, lastCorrectedTimestamp[0]);
-                    data[0] = new Data(SensorType.ACCELEROMETER, correctTimeStamp, getAccelerometer(bytes, accelerometerSensitivity));
-                    data[1] = new Data(SensorType.GYROSCOPE, correctTimeStamp, getGyroscope(bytes, gyroscopeSensitivity));
-                    data[2] = new Data(SensorType.MOTION_RAW, curTime, getRaw(bytes));
-                    data[3] = new Data(SensorType.MOTION_SEQUENCE_NUMBER, correctTimeStamp, new double[]{sequenceNumber});
-                    lastCorrectedTimestamp[0] = correctTimeStamp;
-                    lastSequenceNumber[0] = sequenceNumber;
-                    return Observable.fromArray(data);
+                    ArrayList<Data> data = new ArrayList<>();
+                    try {
+                        int sequenceNumber = getSequenceNumber(bytes);
+                        long correctTimeStamp = correctTimeStamp(sequenceNumber, lastSequenceNumber[0], curTime, lastCorrectedTimestamp[0]);
+                        data.add(new Data(SensorType.ACCELEROMETER, correctTimeStamp, getAccelerometer(bytes, accelerometerSensitivity)));
+                        data.add(new Data(SensorType.GYROSCOPE, correctTimeStamp, getGyroscope(bytes, gyroscopeSensitivity)));
+                        data.add(new Data(SensorType.MOTION_RAW, curTime, getRaw(bytes)));
+                        data.add(new Data(SensorType.MOTION_SEQUENCE_NUMBER, correctTimeStamp, new double[]{sequenceNumber}));
+                        lastCorrectedTimestamp[0] = correctTimeStamp;
+                        lastSequenceNumber[0] = sequenceNumber;
+                    } catch (Exception e) {
+                        MyLog.error(this.getClass().getName(), "listen()", "packet exception: " + e.getMessage());
+                    }
+                    return Observable.just(data);
                 });
     }
 
 
     private double[] getAccelerometer(byte[] bytes, double acl_sensitivity) {
         double[] sample = new double[3];
-        sample[0] = ((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff))*acl_sensitivity/32768.0;
-        sample[1] = ((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff))*acl_sensitivity/32768.0;
-        sample[2] = ((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff))*acl_sensitivity/32768.0;
+        sample[0] = ((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff)) * acl_sensitivity / 32768.0;
+        sample[1] = ((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff)) * acl_sensitivity / 32768.0;
+        sample[2] = ((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff)) * acl_sensitivity / 32768.0;
         return sample;
     }
 
 
     private double[] getGyroscope(byte[] bytes, double gyro_sensitivity) {
         double[] sample = new double[3];
-        sample[0] = ((short) ((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff))*gyro_sensitivity/32768.0;
-        sample[1] = ((short) ((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff))*gyro_sensitivity/32768.0;
-        sample[2] = ((short) ((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff))*gyro_sensitivity/32768.0;
+        sample[0] = ((short) ((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff)) * gyro_sensitivity / 32768.0;
+        sample[1] = ((short) ((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff)) * gyro_sensitivity / 32768.0;
+        sample[2] = ((short) ((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff)) * gyro_sensitivity / 32768.0;
         return sample;
     }
 

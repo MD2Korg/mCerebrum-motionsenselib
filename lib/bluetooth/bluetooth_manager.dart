@@ -72,9 +72,10 @@ class BluetoothManager {
   Future<void> addDevice(Device device) async{
     DeviceSettings deviceSettings;
     switch(device.bluetoothDevice.name){
-      case "EETech_Motion": deviceSettings=new DeviceSettings("MotionSense", "MOTION_SENSE", device.platformId, device.bluetoothDevice.id.toString(), "1.0.3.0");break;
-      case "MotionSenseHRV": deviceSettings=new DeviceSettings("MotionSenseHRV","MOTION_SENSE_HRV", device.platformId, device.bluetoothDevice.id.toString(), "1.0.1.0");break;
-      case "MotionSenseHRV+": deviceSettings=new DeviceSettings("MotionSenseHRV+","MOTION_SENSE_HRV_PLUS", device.platformId, device.bluetoothDevice.id.toString(), "1.0.2.0");break;
+      case "Autosense": deviceSettings = new DeviceSettings( "AUTOSENSE_BLE", device.platformId, device.bluetoothDevice.id.toString(), "1.0.0.0");break;
+      case "EETech_Motion": deviceSettings=new DeviceSettings("MOTION_SENSE", device.platformId, device.bluetoothDevice.id.toString(), "1.0.3.0");break;
+      case "MotionSenseHRV": deviceSettings=new DeviceSettings("MOTION_SENSE_HRV", device.platformId, device.bluetoothDevice.id.toString(), "1.0.1.0");break;
+      case "MotionSenseHRV+": deviceSettings=new DeviceSettings("MOTION_SENSE_HRV_PLUS", device.platformId, device.bluetoothDevice.id.toString(), "1.0.2.0");break;
       case "MotionSense2": deviceSettings=await _addDeviceForV2(device);break;
     }
     settings.motionSenseDevices.add(deviceSettings);
@@ -93,13 +94,13 @@ class BluetoothManager {
       versionStr+="."+version[i].toString();
     }
     switch(version[2]){
-      case 1: deviceSettings=new DeviceSettings("MotionSense_V2","MOTION_SENSE_V2", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
-      case 2: deviceSettings=new DeviceSettings("MotionSenseHRV_V2","MOTION_SENSE_HRV_V2", device.platformId, device.bluetoothDevice.id.toString(), versionStr);
+      case 1: deviceSettings=new DeviceSettings("MOTION_SENSE_V2", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
+      case 2: deviceSettings=new DeviceSettings("MOTION_SENSE_HRV_V2", device.platformId, device.bluetoothDevice.id.toString(), versionStr);
       break;
-      case 2: deviceSettings=new DeviceSettings("MotionSenseHRV+_V2","MOTION_SENSE_HRV_PLUS_V2", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
-      case 4: deviceSettings=new DeviceSettings("MotionSenseHRV+Gen2 (Red)","MOTION_SENSE_HRV_PLUS_GEN2_RED", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
-      case 5: deviceSettings=new DeviceSettings("MotionSenseHRV+Gen2 (Green)","MOTION_SENSE_HRV_PLUS_GEN2_GREEN", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
-      case 6: deviceSettings=new DeviceSettings("MotionSenseHRV+Gen2 (Red)","MOTION_SENSE_HRV_PLUS_GEN2_RED", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
+      case 2: deviceSettings=new DeviceSettings("MOTION_SENSE_HRV_PLUS_V2", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
+      case 4: deviceSettings=new DeviceSettings("MOTION_SENSE_HRV_PLUS_GEN2_RED", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
+      case 5: deviceSettings=new DeviceSettings("MOTION_SENSE_HRV_PLUS_GEN2_GREEN", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
+      case 6: deviceSettings=new DeviceSettings("MOTION_SENSE_HRV_PLUS_GEN2_RED", device.platformId, device.bluetoothDevice.id.toString(), versionStr);break;
     }
     return deviceSettings;
   }

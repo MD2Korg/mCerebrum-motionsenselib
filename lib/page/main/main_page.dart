@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:motionsenselib/data/summary.dart';
 import 'package:motionsenselib/page/settings/settings_page.dart';
 import 'package:motionsenselib/settings/motionsense_settings.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 
 import '../../motionsenselib.dart';
 import 'summary_table.dart';
@@ -82,20 +84,28 @@ class _MainPageState extends State<MainPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+
+            Container(
+              color: Theme.of(context).backgroundColor,
+              child: Container(
+                padding: EdgeInsets.all(10),
+                child: Center(
+                  child: Text(
+                    "Activity",
+                    style: Theme.of(context).textTheme.body2,
+                  ),
+                ),
+              ),
+            ),
             ListTile(
                 title: Text(
                   "Data Collection",
-                  style: TextStyle(fontSize: 16),
                 ),
                 subtitle: summary.isRunning()
-                    ? Text(summary.getRunningTime())
+                    ? Text(summary.getRunningTime(),style: Theme.of(context).textTheme.subtitle)
                     : null, //Text('stopped'),
                 trailing: !summary.isRunning()
                     ? new OutlineButton(
-                        color: Colors.green,
-                        shape: new RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(10.0)),
-                        textColor: Colors.green,
                         onPressed: () async{
                           widget.callback("background",true);
                           await MotionSenseLib.setBackgroundService(true);
@@ -103,15 +113,10 @@ class _MainPageState extends State<MainPage> {
                           startTimerIfRequired();
                           setState(() {});
                         },
-                        child: Icon(
-                          Icons.play_circle_outline,
-                          color: Colors.green,
-                        ) //new Text("Delete", style: TextStyle(fontSize: 14)),
-                        )
+                        child: Icon(MaterialCommunityIcons.getIconData("play-outline"))
+                    )
                     : new OutlineButton(
                         color: Colors.red,
-                        shape: new RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(10.0)),
                         textColor: Colors.red,
                         onPressed: () async {
                           widget.callback("background",false);
@@ -123,21 +128,15 @@ class _MainPageState extends State<MainPage> {
                         child: Icon(
                           Icons.pause_circle_outline,
                           color: Colors.red,
-                        ) //new Text("Delete", style: TextStyle(fontSize: 14)),
+                        )
                         )),
             ListTile(
-//                leading: Icon(Icons.settings),
               title: Text(
                 "Settings",
-                style: TextStyle(fontSize: 16),
               ),
               subtitle: Text("Device Configured: " +
-                  widget.settings.motionSenseDevices.length.toString()),
+                  widget.settings.motionSenseDevices.length.toString(), style: Theme.of(context).textTheme.subtitle,),
               trailing: new OutlineButton(
-                  color: Colors.green,
-                  shape: new RoundedRectangleBorder(
-                      borderRadius: new BorderRadius.circular(10.0)),
-                  textColor: Colors.green,
                   onPressed: () async {
                     stopTimer();
                     var res = await Navigator.push(
@@ -156,33 +155,18 @@ class _MainPageState extends State<MainPage> {
                     startTimerIfRequired();
                   },
                   child: Icon(
-                    Icons.settings,
-                    color: Colors.green,
-                  ) //new Text("Delete", style: TextStyle(fontSize: 14)),
+                      MaterialCommunityIcons.getIconData("settings-outline"),
+                  )
                   ),
-
-/*
-                trailing: new FlatButton(
-                  textColor: Colors.white,
-                  color: Colors.green,
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        new MaterialPageRoute(
-                            builder: (_context) => new SettingsPage()));
-                  },
-                  child: new Text("Open", style: TextStyle(fontSize: 16)),
-                ),
-*/
             ),
             Container(
-              color: Theme.of(context).highlightColor,
+              color: Theme.of(context).backgroundColor,
               child: Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(10),
                 child: Center(
                   child: Text(
                     "Data Summary",
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: Theme.of(context).textTheme.body2,
                   ),
                 ),
               ),

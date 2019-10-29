@@ -83,11 +83,11 @@ public class MotionSenseHrvV2 extends MotionSenseV2 {
     protected ArrayList<Characteristics> createCharacteristics() {
         ArrayList<Characteristics> characteristics = super.createCharacteristics();
         if (deviceSettings.isPpgFilterEnable() && (deviceSettings.isPpgEnable() || deviceSettings.isRawPpgEnable() || deviceSettings.isPpgDataQualityEnable() || deviceSettings.isSequenceNumberPpgEnable())) {
-            characteristics.add(new CharacteristicPPGFilteredOldV2(deviceSettings.getRawPpgSampleRate()));
-            characteristics.add(new CharacteristicPPGFilteredDcOldV2(deviceSettings.getRawPpgSampleRate()));
+            characteristics.add(new CharacteristicPPGFilteredOldV2(deviceSettings.getCharacteristicPpgSampleRate(), deviceSettings.isCorrectTimestamp()));
+            characteristics.add(new CharacteristicPPGFilteredDcOldV2(deviceSettings.getCharacteristicPpgSampleRate(), deviceSettings.isCorrectTimestamp()));
         }
         if (!deviceSettings.isPpgFilterEnable() && (deviceSettings.isPpgEnable() || deviceSettings.isRawPpgEnable() || deviceSettings.isPpgDataQualityEnable() || deviceSettings.isSequenceNumberPpgEnable())) {
-            characteristics.add(new CharacteristicPpgOldV2(deviceSettings.getRawPpgSampleRate()));
+            characteristics.add(new CharacteristicPpgOldV2(deviceSettings.getCharacteristicPpgSampleRate(), deviceSettings.isCorrectTimestamp()));
         }
         return characteristics;
     }

@@ -51,7 +51,6 @@ public class MainActivity extends FlutterActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        MotionSenseManager.init(this);
         GeneratedPluginRegistrant.registerWith(this);
 
         new MethodChannel(this.getFlutterView(), "org.md2k.motionsenselib_example.channel").setMethodCallHandler(new MethodChannel.MethodCallHandler() {
@@ -72,9 +71,10 @@ public class MainActivity extends FlutterActivity {
                             }
                             in.close();
 
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        } catch (Exception e) {
+                            Log.e("abc","file read error");
                         }
+                        Log.d("abc","readsettings ended");
                         result.success(myData.toString());
                         break;
                     case "SAVE_SETTINGS":
@@ -124,7 +124,6 @@ public class MainActivity extends FlutterActivity {
             }
         }
         receiveCallbacks.clear();
-
     }
 
     void startSave() {

@@ -72,7 +72,7 @@ public class MotionSenseV2 extends Device {
     protected ArrayList<Characteristics> createCharacteristics() {
         ArrayList<Characteristics> characteristics = new ArrayList<>();
         if (deviceSettings.isAccelerometerEnable() || deviceSettings.isGyroscopeEnable() || deviceSettings.isRawMotionEnable() || deviceSettings.isSequenceNumberMotionEnable() || deviceSettings.isAccelerometerDataQualityEnable())
-            characteristics.add(new CharacteristicMotionV2(deviceSettings.getRawMotionSampleRate(), deviceSettings.getAccelerometerSensitivity(), deviceSettings.getGyroscopeSensitivity()));
+            characteristics.add(new CharacteristicMotionV2(deviceSettings.getCharacteristicMotionSampleRate(), deviceSettings.isCorrectTimestamp(), deviceSettings.getAccelerometerSensitivity(), deviceSettings.getGyroscopeSensitivity()));
         if (deviceSettings.isBatteryEnable())
             characteristics.add(new CharacteristicBatteryV1V2());
 

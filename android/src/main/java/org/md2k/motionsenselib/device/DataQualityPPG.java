@@ -34,18 +34,14 @@ import io.reactivex.schedulers.Timed;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 public class DataQualityPPG extends DataQuality {
-    private ArrayList<Data> samples1=new ArrayList<>();
-public static final int DELAY = 3000;
+    private ArrayList<Data> samples1 = new ArrayList<>();
+    private static final int DELAY = 3000;
 
     private boolean[] isGood3Sec(ArrayList<Data> values) {
-        double[] sum = new double[]{0, 0, 0};
         boolean[] res = new boolean[6];
         int[] count = new int[3];
         for (int i = 0; i < values.size(); i++) {
             double[] samples = values.get(i).getSample();
-            sum[0] += samples[0];
-            sum[1] += samples[1];
-            sum[2] += samples[2];
             if (samples[0] < 30000 || samples[0] > 170000) {
                 count[0]++;
             }
@@ -63,7 +59,7 @@ public static final int DELAY = 3000;
     }
 
     private int[] getMean(ArrayList<Data> values) {
-        int[] sum = new int[]{0,0,0};
+        int[] sum = new int[]{0, 0, 0};
         for (int i = 0; i < values.size(); i++) {
             double[] samples = values.get(i).getSample();
             sum[0] += samples[0];
@@ -86,9 +82,10 @@ public static final int DELAY = 3000;
         }
         return l;
     }
+
     @Override
-    protected void addSample(Data data){
-        if(data.getSensorType()==SensorType.PPG) {
+    protected void addSample(Data data) {
+        if (data.getSensorType() == SensorType.PPG) {
             samples1.add(data);
         }
     }
@@ -96,24 +93,26 @@ public static final int DELAY = 3000;
     private double[] getSample(int index) {
         double[] d = new double[samples1.size()];
         for (int i = 0; i < samples1.size(); i++) {
-            d[i] = ((double[]) samples1.get(i).getSample())[index];
+            d[i] = samples1.get(i).getSample()[index];
         }
         return d;
     }
 
     @Override
-    protected Observable<Data> getObservable(){
-        return Observable.interval(DELAY, TimeUnit.MILLISECONDS).timeInterval().map(new Function<Timed<Long>, Data>() {
+    protected Observable<Data> getObservable() {
+        long timestamp = System.currentTimeMillis();
+        return Observable.interval(DELAY - timestamp % DELAY, DELAY, TimeUnit.MILLISECONDS).timeInterval().map(new Function<Timed<Long>, Data>() {
             @Override
             public Data apply(Timed<Long> longTimed) throws Exception {
                 DataQualityType dataQualityType = getStatus();
-                return new Data(SensorType.PPG_DATA_QUALITY, System.currentTimeMillis(), new double[]{dataQualityType.getValue()});
+                return new Data(SensorType.PPG_DATA_QUALITY, (System.currentTimeMillis()/DELAY)*DELAY, new double[]{dataQualityType.getValue()});
             }
         });
     }
 
     private synchronized DataQualityType getStatus() {
         try {
+            if(samples1==null || samples1.size()==0) return DataQualityType.NO_DATA;
             long curTime = System.currentTimeMillis();
             Iterator<Data> i = samples1.iterator();
             while (i.hasNext()) {

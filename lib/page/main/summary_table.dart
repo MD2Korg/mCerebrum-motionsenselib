@@ -1,8 +1,6 @@
-// Copyright 2016 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 
 import '../../motionsenselib.dart';
 class DataSourceInfo {
@@ -58,8 +56,7 @@ class DataSourceInfoList extends DataTableSource {
               sensor.sensorType.startsWith("RAW")
                   ? SizedBox()
                   : Icon(
-                      Icons.multiline_chart,
-                      color: Colors.green,
+                MaterialCommunityIcons.getIconData("chart-bell-curve"),
                     ), onTap: () {
             if (sensor.sensorType.startsWith("RAW")) return;
 //            Motionsense.plot(sensor.platformType, sensor.platformId, sensor.sensorType);
@@ -95,31 +92,32 @@ class DataSourceTable extends StatelessWidget {
                   columnSpacing: 10,
                   horizontalMargin: 10,
                   columns: <DataColumn>[
-                    DataColumn(label: const Text('Device')),
+                    DataColumn(label: Text('Device',style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black))),
                     DataColumn(
-                      label: const Text('Sensor'),
+                      label: Text('Sensor',style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black)),
                     ),
                     DataColumn(
-                      label: const Text('Count'),
+                      label: Text('Count',style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black)),
                     ),
                     DataColumn(
-                      label: const Text('Freq'),
+                      label: Text('Freq',style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black)),
                     ),
-                    DataColumn(label: const Text('Plot')),
+                    DataColumn(label: Text('Plot',style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black))),
                   ],
                   rows: dataSourceInfoList.dataSourceInfoList
                       .map((itemRow) => DataRow(cells: [
-                            DataCell(Text(itemRow.platformId)),
-                            DataCell(Text(itemRow.sensorTitle)),
-                            DataCell(Text(itemRow.dataCount.toString())),
+                            DataCell(Text(itemRow.platformId, style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black))),
+                            DataCell(Text(itemRow.sensorTitle, style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black))),
+                            DataCell(Text(itemRow.dataCount.toString(), style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black))),
                             DataCell(
-                                Text(itemRow.frequency.toStringAsFixed(1))),
+                                Text(itemRow.frequency.toStringAsFixed(1), style: Theme.of(context).textTheme.subtitle.copyWith(color: Colors.black))),
                             DataCell(
                                 itemRow.sensorType.startsWith("RAW")
                                     ? SizedBox()
                                     : Icon(
-                                        Icons.insert_chart,
-                                        color: Colors.blue,
+                                  MaterialCommunityIcons.getIconData("chart-timeline-variant"),
+//                                        color: Colors.grey[400]
+                                        color: Colors.black54,
                                       ), onTap: () async{
 //    if (sensor.sensorType.startsWith("RAW")) return;
             await MotionSenseLib.plot(itemRow.platformType, itemRow.platformId, itemRow.sensorType);

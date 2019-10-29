@@ -44,7 +44,6 @@ import io.reactivex.Observable;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 public class MotionSense extends Device {
-
     public MotionSense(RxBleClient rxBleClient, DeviceSettings deviceSettings) {
         super(rxBleClient, deviceSettings);
     }
@@ -53,6 +52,16 @@ public class MotionSense extends Device {
     protected Observable<RxBleConnection> setConfiguration(RxBleConnection rxBleConnection) {
         return Observable.just(rxBleConnection);
     }
+
+    /*
+
+    Data channels
+    --------------
+    CHARACTERISTIC_MOTION       -       ACCELEROMETER, GYROSCOPE, SEQUENCE_NUMBER, RAW
+    CHARACTERISTIC_BATTERY      -       BATTERY
+    DATA_QUALITY                -       ACCELEROMETER_DATA_QUALITY
+
+     */
 
     @Override
     protected LinkedHashMap<SensorType, SensorInfo> createSensorInfo() {
@@ -69,8 +78,10 @@ public class MotionSense extends Device {
     @Override
     protected ArrayList<Characteristics> createCharacteristics() {
         ArrayList<Characteristics> characteristics = new ArrayList<>();
+        boolean correctTimestamp = deviceSettings.isCorrectTimestamp();
+
         if (deviceSettings.isAccelerometerEnable() || deviceSettings.isGyroscopeEnable() || deviceSettings.isRawMotionEnable() || deviceSettings.isSequenceNumberMotionEnable() || deviceSettings.isAccelerometerDataQualityEnable())
-            characteristics.add(new CharacteristicMotionSense(deviceSettings.getRawMotionSampleRate()));
+            characteristics.add(new CharacteristicMotionSense(correctTimestamp));
         if (deviceSettings.isBatteryEnable())
             characteristics.add(new CharacteristicBatteryV1V2());
         return characteristics;

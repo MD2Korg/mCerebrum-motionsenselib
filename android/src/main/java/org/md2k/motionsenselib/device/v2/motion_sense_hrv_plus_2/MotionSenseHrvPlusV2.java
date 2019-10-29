@@ -63,7 +63,7 @@ public class MotionSenseHrvPlusV2 extends MotionSenseHrvV2 {
     protected ArrayList<Characteristics> createCharacteristics() {
         ArrayList<Characteristics> characteristics = super.createCharacteristics();
         if(deviceSettings.isMagnetometerEnable()|| deviceSettings.isRawMagnetometerEnable()|| deviceSettings.isSequenceNumberMagnetometerEnable()){
-            characteristics.add(new CharacteristicMagnetometerV2Old(deviceSettings.getRawMagnetometerSampleRate()));
+            characteristics.add(new CharacteristicMagnetometerV2Old(deviceSettings.isCorrectTimestamp()));
         }
 
         return characteristics;

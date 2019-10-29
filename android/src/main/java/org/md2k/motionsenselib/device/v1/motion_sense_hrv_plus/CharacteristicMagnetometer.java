@@ -25,15 +25,14 @@ package org.md2k.motionsenselib.device.v1.motion_sense_hrv_plus;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import android.util.Log;
-
 import com.polidea.rxandroidble2.RxBleConnection;
 
-import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 import org.md2k.motionsenselib.device.v1.CharacteristicsV1;
+import org.md2k.motionsenselib.log.MyLog;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -42,30 +41,35 @@ import io.reactivex.functions.Function;
 class CharacteristicMagnetometer extends CharacteristicsV1 {
     private static final UUID CHARACTERISTICS = UUID.fromString("da39c924-1d81-48e2-9c68-d0ae4bbd351f");
     private static final int MAX_SEQUENCE_NUMBER = 1024;
-    private double frequency;
+    private static final double CHARACTERISTIC_FREQUENCY=12.5;
 
-    CharacteristicMagnetometer(double frequency) {
-        this.frequency = frequency;
+    CharacteristicMagnetometer(boolean correctTimestamp) {
+        super(CHARACTERISTIC_FREQUENCY, correctTimestamp);
     }
 
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         final int[] lastSequenceNumber = {-1};
         final long[] lastCorrectedTimestamp = {-1};
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                .flatMap((Function<byte[], Observable<Data>>) bytes -> {
+                .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
                     long curTime = System.currentTimeMillis();
-                    int sequenceNumber = getSequenceNumber(bytes);
-                    long correctedTimestamp = correctTimeStamp(sequenceNumber/2, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], frequency, MAX_SEQUENCE_NUMBER/2);
-                    Data[] data = new Data[5];
-                    data[0] = new Data(SensorType.MAGNETOMETER, correctedTimestamp-(long)(1000.0/(frequency*2)), getMagnetometer1(bytes));
-                    data[1] = new Data(SensorType.MAGNETOMETER, correctedTimestamp, getMagnetometer2(bytes));
-                    data[2] = new Data(SensorType.MAGNETOMETER_SENSITIVITY, correctedTimestamp, getSensitivity(bytes));
-                    data[3] = new Data(SensorType.MAGNETOMETER_RAW, curTime, getRaw(bytes));
-                    data[4] = new Data(SensorType.MAGNETOMETER_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
-                    lastCorrectedTimestamp[0] = correctedTimestamp;
-                    lastSequenceNumber[0] = sequenceNumber;
-                    return Observable.fromArray(data);
+                    ArrayList<Data> data = new ArrayList<Data>();
+
+                    try {
+                        int sequenceNumber = getSequenceNumber(bytes);
+                        long timestamp = getTimestamp(sequenceNumber / 2, curTime, lastSequenceNumber[0], lastCorrectedTimestamp[0], MAX_SEQUENCE_NUMBER / 2);
+                        data.add(new Data(SensorType.MAGNETOMETER, timestamp - (long) (1000.0 / (frequency * 2)), getMagnetometer1(bytes)));
+                        data.add(new Data(SensorType.MAGNETOMETER, timestamp, getMagnetometer2(bytes)));
+                        data.add(new Data(SensorType.MAGNETOMETER_SENSITIVITY, timestamp, getSensitivity(bytes)));
+                        data.add(new Data(SensorType.MAGNETOMETER_RAW, curTime, getRaw(bytes)));
+                        data.add(new Data(SensorType.MAGNETOMETER_SEQUENCE_NUMBER, timestamp, new double[]{sequenceNumber}));
+                        lastCorrectedTimestamp[0] = timestamp;
+                        lastSequenceNumber[0] = sequenceNumber;
+                    } catch (Exception e) {
+                        MyLog.error(this.getClass().getName(), "listen()", "packet exception: " + e.getMessage());
+                    }
+                    return Observable.just(data);
                 });
     }
 
@@ -75,9 +79,9 @@ class CharacteristicMagnetometer extends CharacteristicsV1 {
         double sen_x = sensitivity[0];
         double sen_y = sensitivity[1];
         double sen_z = sensitivity[2];
-        sample[0] = ((short)((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff))*((sen_x-128)*.5/128.0+1);
-        sample[1] = ((short)((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff))*((sen_y-128)*.5/128.0+1);
-        sample[2] = ((short)((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff))*((sen_z-128)*.5/128.0+1);
+        sample[0] = ((short) ((bytes[0] & 0xff) << 8) | (bytes[1] & 0xff)) * ((sen_x - 128) * .5 / 128.0 + 1);
+        sample[1] = ((short) ((bytes[4] & 0xff) << 8) | (bytes[5] & 0xff)) * ((sen_y - 128) * .5 / 128.0 + 1);
+        sample[2] = ((short) ((bytes[8] & 0xff) << 8) | (bytes[9] & 0xff)) * ((sen_z - 128) * .5 / 128.0 + 1);
         return sample;
     }
 
@@ -87,14 +91,10 @@ class CharacteristicMagnetometer extends CharacteristicsV1 {
         double sen_x = sensitivity[0];
         double sen_y = sensitivity[1];
         double sen_z = sensitivity[2];
-        sample[0] = ((short)((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff))*((sen_x-128)*.5/128.0+1);
-        sample[1] = ((short)((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff))*((sen_y-128)*.5/128.0+1);
-        sample[2] = ((short)((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff))*((sen_z-128)*.5/128.0+1);
+        sample[0] = ((short) ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff)) * ((sen_x - 128) * .5 / 128.0 + 1);
+        sample[1] = ((short) ((bytes[6] & 0xff) << 8) | (bytes[7] & 0xff)) * ((sen_y - 128) * .5 / 128.0 + 1);
+        sample[2] = ((short) ((bytes[10] & 0xff) << 8) | (bytes[11] & 0xff)) * ((sen_z - 128) * .5 / 128.0 + 1);
         return sample;
-    }
-
-    private double convertADCtoSI(double mag, double sensitivity){
-        return mag*((sensitivity-128)*.5/128.0+1);
     }
 
     private double[] getSensitivity(byte[] bytes) {
@@ -106,6 +106,6 @@ class CharacteristicMagnetometer extends CharacteristicsV1 {
     }
 
     private int getSequenceNumber(byte[] data) {
-        return ((data[18] & 0x03) << 8) | (data[19] & 0xff);
+        return ((data[data.length-2] & 0x03) << 8) | (data[data.length-1] & 0xff);
     }
 }

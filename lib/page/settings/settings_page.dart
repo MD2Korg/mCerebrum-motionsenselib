@@ -41,7 +41,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     margin: EdgeInsets.only(bottom: 1),
                     color: Colors.redAccent,
                     child: new ListTile(
-                      dense: true,
                       title: new Text(
                         'Please enable bluetooth',
                         style: Theme.of(context).primaryTextTheme.subhead,
@@ -63,7 +62,6 @@ class _SettingsPageState extends State<SettingsPage> {
                     margin: EdgeInsets.only(bottom: 1),
                     color: Colors.redAccent,
                     child: new ListTile(
-                      dense: true,
                       title: new Text(
                         'Please enable gps',
                         style: Theme.of(context).primaryTextTheme.subhead,
@@ -85,7 +83,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ]);
         });
   }
-
+  BuildContext myContext;
   @override
   void initState() {
     super.initState();
@@ -93,6 +91,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _settingsBloc.dispatch(InitEvent());
     _progressDialog = new ProgressDialog(context,
         type: ProgressDialogType.Normal, isDismissible: true);
+    myContext = context;
   }
 
   @override
@@ -103,54 +102,54 @@ class _SettingsPageState extends State<SettingsPage> {
 
   List<Widget> listAvailableDevices(
       BuildContext context, List<Device> devices) {
-    List<String> ll = new List();
-    ll.add("LEFT_WRIST");
-    ll.add("RIGHT_WRIST");
-    ll.add("OTHER");
     List<Widget> list = new List();
     for (int i = 0; i < devices.length; i++) {
-      ListTile l = new ListTile(
-        dense: true,
-        title: new Text(
-          devices[i].bluetoothDevice.name,
-          style: TextStyle(fontSize: 12),
+      List<String> ll = new List();
+      if(devices[i].bluetoothDevice.name=="Autosense"){
+        ll.add("CHEST");
+      }else {
+        ll.add("LEFT_WRIST");
+        ll.add("RIGHT_WRIST");
+      }
+      ll.add("OTHER");
+      Widget l = PopupMenuButton<String>(
+        elevation: 3.2,
+        offset: Offset(MediaQuery.of(context).size.width/10,0),
+        onSelected: (String value) async {
+          if (value == "OTHER") {
+            devices[i].platformId = await _asyncInputDialog();
+            if(devices[i].platformId=='') return;
+          }
+          else devices[i].platformId = value;
+          if (_settingsBloc.isConfigured(devices[i])) {
+            final snackBar =
+            SnackBar(content: Text("Error: Duplicate sensor placement"));
+            Scaffold.of(context).showSnackBar(snackBar);
+          } else {
+            isEdit = true;
+            _settingsBloc.dispatch(AddDeviceEvent(devices[i]));
+          }
+        },
+        child: new ListTile(
+            title: new Text(
+              devices[i].bluetoothDevice.name,
+            ),
+            subtitle: new Text(
+              devices[i].bluetoothDevice.id.toString(), style: Theme.of(context).textTheme.subtitle,
+            ),
+          trailing: Icon(Icons.add, color: Theme.of(context).iconTheme.color,),
         ),
-        subtitle: new Text(
-          devices[i].bluetoothDevice.id.toString(),
-          style: TextStyle(fontSize: 10),
-        ),
-        trailing: PopupMenuButton<String>(
-          elevation: 3.2,
-          onSelected: (String value) async {
-            devices[i].platformId = value;
-            if (value == "OTHER") {
-              devices[i].platformId = await _asyncInputDialog(context);
-            }
-            if (_settingsBloc.isConfigured(devices[i])) {
-              final snackBar =
-                  SnackBar(content: Text("Error: Duplicate sensor placement"));
-              Scaffold.of(context).showSnackBar(snackBar);
-            } else {
-              isEdit = true;
-              _settingsBloc.dispatch(AddDeviceEvent(devices[i]));
-            }
-          },
-          child: Icon(Icons.add, color: Colors.green),
-          /*new Text("Add",
+        /*new Text("Add",
               style:
               TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),*/
-          itemBuilder: (BuildContext context) {
-            return ll.map((String choice) {
-              return PopupMenuItem<String>(
-                value: choice,
-                child: Text(
-                  choice,
-                  style: TextStyle(fontSize: 12),
-                ),
-              );
-            }).toList();
-          },
-        ),
+        itemBuilder: (BuildContext context) {
+          return ll.map((String choice) {
+            return PopupMenuItem<String>(
+              value: choice,
+              child: Text(choice,),
+            );
+          }).toList();
+        },
       );
       list.add(l);
     }
@@ -165,24 +164,20 @@ class _SettingsPageState extends State<SettingsPage> {
     List<Widget> list = new List();
     for (int i = 0; i < deviceSettings.length; i++) {
       ListTile l = new ListTile(
-        dense: true,
-//        leading: new Text(deviceSettings[i].platformId,style: TextStyle(fontSize: 10), textAlign: TextAlign.center,),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
             new Text(
-              deviceSettings[i].name,
-              style: TextStyle(fontSize: 12),
+              deviceSettings[i].getName(),
             ),
             new Text(
               deviceSettings[i].platformId,
-              style: TextStyle(fontSize: 12, color: Colors.green),
+              style: TextStyle(color: Theme.of(context).accentColor),
             )
           ],
         ),
         subtitle: new Text(
-          deviceSettings[i].deviceId,
-          style: TextStyle(fontSize: 10),
+          deviceSettings[i].deviceId, style: Theme.of(context).textTheme.subtitle
         ),
         trailing: PopupMenuButton<String>(
           elevation: 3.2,
@@ -208,7 +203,7 @@ class _SettingsPageState extends State<SettingsPage> {
             return ll.map((String choice) {
               return PopupMenuItem<String>(
                 value: choice,
-                child: Text(choice, style: TextStyle(fontSize: 12)),
+                child: Text(choice),
               );
             }).toList();
           },
@@ -221,6 +216,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+
     return WillPopScope(
       onWillPop: () async {
         MotionSenseSettings s = _settingsBloc.settings();
@@ -255,15 +251,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     new Image.asset('assets/motionsense.jpg',
                         package: 'motionsenselib',
                         width: double.infinity,
-                        height: 200.0,
+                        height: 150.0,
                         fit: BoxFit.fill),
                     Container(
-                      color: Theme.of(context).highlightColor,
+                      color: Theme.of(context).backgroundColor,
                       child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.all(10.0),
                         child: Center(
-                          child: Text("Configured Devices",
-                              style: Theme.of(context).textTheme.subtitle),
+                          child: Text("Configured Devices", style: Theme.of(context).textTheme.body2,),
                         ),
                       ),
                     ),
@@ -279,8 +274,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       "Not configured yet",
                                       style: TextStyle(
                                           fontStyle: FontStyle.italic,
-                                          color: Colors.grey,
-                                          fontSize: 12),
+                                          color: Colors.grey,),
                                     ),
                                   ))
                               : new Column(
@@ -289,45 +283,42 @@ class _SettingsPageState extends State<SettingsPage> {
                                 );
                         }),
                     Container(
-                      padding: EdgeInsets.only(top: 16, bottom: 16, right: 16),
-                      color: Theme.of(context).highlightColor,
+                      padding: EdgeInsets.all(10),
+                      color: Theme.of(context).backgroundColor,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Expanded(child: Container()),
+//                          Expanded(child: Container()),
                           Expanded(
                             child: Center(
-                              child: Text("Available Devices",
-                                  style: Theme.of(context).textTheme.subtitle),
+                              child: Text("Available Devices",style: Theme.of(context).textTheme.body2),
                             ),
                           ),
                           _settingsBloc.isScanning()
-                              ? Expanded(
-                                  child: GestureDetector(
+                              ?
+                                  GestureDetector(
                                   child: Container(
                                       alignment: Alignment.centerRight,
                                       child: SizedBox(
                                           height: 16,
                                           width: 16,
                                           child: CircularProgressIndicator(
+                                            backgroundColor: Colors.white,
                                             strokeWidth: 2,
                                           ))),
                                   onTap: () {
                                     _settingsBloc.dispatch(StopScanEvent());
                                   },
-                                ))
-                              : Expanded(
-                                  child: GestureDetector(
+                                )
+                              :  GestureDetector(
                                     child: Text(
                                       "Scan",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold),
+                                      style: Theme.of(context).textTheme.body2.copyWith(color: Theme.of(context).primaryColorLight),
                                       textAlign: TextAlign.right,
                                     ),
                                     onTap: () {
                                       _settingsBloc.dispatch(StartScanEvent());
                                     },
-                                  ),
                                 )
                         ],
                       ),
@@ -351,38 +342,46 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
+  Future<String> _asyncInputDialog() async {
+    return showDialog<String>(
+      context: myContext,
+      barrierDismissible: false,
+      // dialog is dismissible with a tap on the barrier
+      builder: (BuildContext context) {
+        String selected = '';
+        return AlertDialog(
+          title: Text('Enter Sensor Placement',),
+          content: new Row(
+            children: <Widget>[
+              new Expanded(
+                  child: new TextField(
+                    autofocus: true,
+                    decoration: new InputDecoration(labelText: 'Sensor Placement'),
+                    onChanged: (value) {
+                      selected = value;
+                    },
+                  ))
+            ],
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(myContext).pop('');
+              },
+            ),
+            FlatButton(
+              child: Text('Ok'),
+              onPressed: () {
+                Navigator.of(myContext).pop(selected);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
 
-Future<String> _asyncInputDialog(BuildContext context) async {
-  String teamName = '';
-  return showDialog<String>(
-    context: context,
-    barrierDismissible: false,
-    // dialog is dismissible with a tap on the barrier
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Enter Sensor Placement'),
-        content: new Row(
-          children: <Widget>[
-            new Expanded(
-                child: new TextField(
-              autofocus: true,
-              decoration: new InputDecoration(labelText: 'Sensor Placement'),
-              onChanged: (value) {
-                teamName = value;
-              },
-            ))
-          ],
-        ),
-        actions: <Widget>[
-          FlatButton(
-            child: Text('Ok'),
-            onPressed: () {
-              Navigator.of(context).pop(teamName);
-            },
-          ),
-        ],
-      );
-    },
-  );
-}

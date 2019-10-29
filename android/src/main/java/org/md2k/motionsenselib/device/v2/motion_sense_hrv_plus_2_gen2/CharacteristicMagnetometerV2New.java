@@ -33,6 +33,7 @@ import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 import org.md2k.motionsenselib.device.v2.CharacteristicsV2;
+import org.md2k.motionsenselib.log.MyLog;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -42,21 +43,22 @@ import io.reactivex.functions.Function;
 
 class CharacteristicMagnetometerV2New extends CharacteristicsV2 {
     private static final UUID CHARACTERISTICS = UUID.fromString("DA39C924-1D81-48E2-9C68-D0AE4BBD351F");
-    private double frequency;
+    private static final double CHARACTERISTIC_FREQUENCY=12.5;
 
-    CharacteristicMagnetometerV2New(double frequency) {
-        this.frequency = frequency;
+    CharacteristicMagnetometerV2New(boolean correctTimestamp) {
+        super(CHARACTERISTIC_FREQUENCY, correctTimestamp);
     }
 
 
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         final long[] lastCorrectedTimestamp = {-1};
         final int[] lastSequenceNumber = {-1};
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                .flatMap((Function<byte[], Observable<Data>>) bytes -> {
+                .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
                     long curTime = System.currentTimeMillis();
                     ArrayList<Data> data = new ArrayList<>();
+                    try{
                     double[] mag1 = getMagnetometer1(bytes);
                     double[] mag2 = getMagnetometer2(bytes);
                     double[] rawLast = getRaw(bytes);
@@ -70,9 +72,10 @@ class CharacteristicMagnetometerV2New extends CharacteristicsV2 {
                     data.add(new Data(SensorType.MAGNETOMETER_SEQUENCE_NUMBER, correctedTimestamp, sequenceNumberLast));
                     lastCorrectedTimestamp[0] = correctedTimestamp;
                     lastSequenceNumber[0] = sequenceNumber;
-                    Data[] d = new Data[data.size()];
-                    data.toArray(d);
-                    return Observable.fromArray(d);
+                    } catch (Exception e) {
+                        MyLog.error(this.getClass().getName(), "listen()", "packet exception: " + e.getMessage());
+                    }
+                    return Observable.just(data);
                 });
     }
 

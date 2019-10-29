@@ -44,7 +44,7 @@ class CharacteristicConfigV2MotionSense extends CharacteristicConfigV2 {
         return setSensorEnableObservable(rxBleConnection, deviceSettings.isAccelerometerEnable(), deviceSettings.isGyroscopeEnable(), false, false)
                 .flatMap((Function<byte[], Single<byte[]>>) bytes -> {
                     if (deviceSettings.isAccelerometerEnable() || deviceSettings.isGyroscopeEnable())
-                        return setSamplingRateObservable(rxBleConnection, deviceSettings.getRawMotionSampleRate(), 0);
+                        return setSamplingRateObservable(rxBleConnection, deviceSettings.getCharacteristicMotionSampleRate(), 0);
                     else return Single.just(new byte[0]);
                 })
                 .flatMap((Function<byte[], Single<byte[]>>) bytes -> {

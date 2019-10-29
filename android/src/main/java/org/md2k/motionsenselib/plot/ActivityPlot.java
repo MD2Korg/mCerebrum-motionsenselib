@@ -12,6 +12,8 @@ import org.md2k.motionsenselib.device.ReceiveCallback;
 import org.md2k.motionsenselib.device.SensorInfo;
 import org.md2k.motionsenselib.device.SensorType;
 
+import java.util.ArrayList;
+
 public class ActivityPlot extends RealtimeLineChartActivity {
     Device device;
     SensorInfo sensorInfo;
@@ -67,9 +69,11 @@ public class ActivityPlot extends RealtimeLineChartActivity {
 
     private ReceiveCallback receiveCallback = new ReceiveCallback() {
         @Override
-        public void onReceive(Data d) {
-            if (d.getSensorType() == sensorInfo.getSensorType()) {
-                updatePlot(d);
+        public void onReceive(ArrayList<Data> d) {
+            for(int i=0;i<d.size();i++) {
+                if (d.get(i).getSensorType() == sensorInfo.getSensorType()) {
+                    updatePlot(d.get(i));
+                }
             }
         }
     };

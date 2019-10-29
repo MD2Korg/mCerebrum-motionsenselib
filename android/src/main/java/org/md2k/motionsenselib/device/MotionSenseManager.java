@@ -9,6 +9,8 @@ import com.polidea.rxandroidble2.LogConstants;
 import com.polidea.rxandroidble2.LogOptions;
 import com.polidea.rxandroidble2.RxBleClient;
 
+import org.md2k.motionsenselib.device.v1.motion_sense.MotionSense;
+import org.md2k.motionsenselib.log.MyLog;
 import org.md2k.motionsenselib.settings.DeviceSettings;
 
 import java.util.ArrayList;
@@ -32,34 +34,11 @@ public class MotionSenseManager {
         devices = new ArrayList<>();
         rxBleClient = RxBleClient.create(context);
         startTimestamp=-1;
-//        RxBleClient.updateLogOptions(new LogOptions.Builder().setLogLevel(LogConstants.DEBUG).setMacAddressLogSetting(LogConstants.MAC_ADDRESS_FULL).build());
         RxJavaPlugins.setErrorHandler(e -> {
             if (e instanceof UndeliverableException) {
                 e = e.getCause();
             }
-/*
-            if ((e instanceof IOException) || (e instanceof SocketException)) {
-                // fine, irrelevant network problem or API that throws on cancellation
-                return;
-            }
-            if (e instanceof InterruptedException) {
-                // fine, some blocking code was interrupted by a dispose call
-                return;
-            }
-            if ((e instanceof NullPointerException) || (e instanceof IllegalArgumentException)) {
-                // that's likely a bug in the application
-                Thread.currentThread().getUncaughtExceptionHandler()
-                        .handleException(Thread.currentThread(), e);
-                return;
-            }
-            if (e instanceof IllegalStateException) {
-                // that's a bug in RxJava or in a custom operator
-                Thread.currentThread().getUncaughtExceptionHandler()
-                        .handleException(Thread.currentThread(), e);
-                return;
-            }
-*/
-                Log.e("error", "Undeliverable exception received, not sure what to do" + e.getMessage());
+            MyLog.error(this.getClass().getCanonicalName(), "MotionSenseManager(Context context)","Undeliverable exception received "+e.getMessage());
         });
     }
 
@@ -120,6 +99,7 @@ public class MotionSenseManager {
     }
 
     public static void start() {
+        MyLog.info(instance.getClass().getName(), "start()", "starting...deviceNo = "+instance.devices.size());
         if(instance.devices.size()==0){
             instance.startTimestamp=-1;
             return;
@@ -131,6 +111,7 @@ public class MotionSenseManager {
     }
 
     public static void stop() {
+        MyLog.info(instance.getClass().getName(), "stop()", "stopping...deviceNo = "+instance.devices.size());
         instance.startTimestamp = -1;
         for (int i = 0; i < instance.devices.size(); i++) {
             instance.devices.get(i).stop();

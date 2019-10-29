@@ -96,14 +96,14 @@ class MotionSenseHrvPlusGen2 extends MotionSenseV2 {
     protected ArrayList<Characteristics> createCharacteristics() {
         ArrayList<Characteristics> characteristics = super.createCharacteristics();
         if (deviceSettings.isPpgFilterEnable() && (deviceSettings.isPpgEnable() || deviceSettings.isRawPpgEnable() || deviceSettings.isPpgDataQualityEnable() || deviceSettings.isSequenceNumberPpgEnable())) {
-            characteristics.add(new CharacteristicPPGFilteredNewV2(deviceSettings.getRawPpgSampleRate()));
-            characteristics.add(new CharacteristicPPGFilteredDcNewV2(deviceSettings.getRawPpgSampleRate()));
+            characteristics.add(new CharacteristicPPGFilteredNewV2(deviceSettings.getCharacteristicPpgSampleRate(), deviceSettings.isCorrectTimestamp()));
+            characteristics.add(new CharacteristicPPGFilteredDcNewV2(deviceSettings.getCharacteristicPpgSampleRate(), deviceSettings.isCorrectTimestamp()));
         }
         if (!deviceSettings.isPpgFilterEnable() && (deviceSettings.isPpgEnable() || deviceSettings.isRawPpgEnable() || deviceSettings.isPpgDataQualityEnable() || deviceSettings.isSequenceNumberPpgEnable())) {
-            characteristics.add(new CharacteristicPpgNewV2(deviceSettings.getRawPpgSampleRate()));
+            characteristics.add(new CharacteristicPpgNewV2(deviceSettings.getCharacteristicPpgSampleRate(), deviceSettings.isCorrectTimestamp()));
         }
         if(deviceSettings.isMagnetometerEnable()|| deviceSettings.isRawMagnetometerEnable()|| deviceSettings.isSequenceNumberMagnetometerEnable()){
-            characteristics.add(new CharacteristicMagnetometerV2New(deviceSettings.getRawMagnetometerSampleRate()));
+            characteristics.add(new CharacteristicMagnetometerV2New(deviceSettings.isCorrectTimestamp()));
         }
 
         return characteristics;

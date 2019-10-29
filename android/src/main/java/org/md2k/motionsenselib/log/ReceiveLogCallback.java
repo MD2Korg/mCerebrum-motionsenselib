@@ -1,6 +1,12 @@
-package org.md2k.motionsenselib.device.v2;
+package org.md2k.motionsenselib.log;
+
+import org.md2k.motionsenselib.device.Data;
+
+import java.util.ArrayList;
+
 /*
  * Copyright (c) 2016, The University of Memphis, MD2K Center
+ * - Syed Monowar Hossain <monowar.hossain@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,29 +30,6 @@ package org.md2k.motionsenselib.device.v2;
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-
-import com.polidea.rxandroidble2.RxBleConnection;
-
-import org.md2k.motionsenselib.device.Characteristics;
-import org.md2k.motionsenselib.device.Data;
-
-import java.util.UUID;
-
-import io.reactivex.Observable;
-
-public abstract class CharacteristicsV2 extends Characteristics {
-    public CharacteristicsV2(double frequency, boolean correctTimestamp){
-        super(frequency, correctTimestamp);
-    }
-
-    protected long correctTimeStamp(int curSequence, int lastSequenceNumber, long curTimestamp, long lastTimestamp) {
-        if(!correctTimestamp || lastSequenceNumber==-1) return curTimestamp;
-
-        int diff = (curSequence - lastSequenceNumber + 65536) % 65536;
-        long predictedTimestamp = diff*4+lastTimestamp;
-        if (curTimestamp < predictedTimestamp || curTimestamp - predictedTimestamp > 1000)
-            predictedTimestamp = curTimestamp;
-        return predictedTimestamp;
-    }
+public interface ReceiveLogCallback {
+    void onReceive(String logType, String className, String methodName, String message);
 }

@@ -28,18 +28,25 @@ package org.md2k.motionsenselib.device;
 
 import com.polidea.rxandroidble2.RxBleConnection;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import io.reactivex.Observable;
 
 public abstract class Characteristics {
+    protected double frequency;
+    protected boolean correctTimestamp;
+    protected Characteristics(double frequency, boolean correctTimestamp){
+        this.frequency = frequency;
+        this.correctTimestamp = correctTimestamp;
+    }
     protected Observable<byte[]> getCharacteristicListener(RxBleConnection rxBleConnection, UUID uuid) {
         return rxBleConnection.setupNotification(uuid)
                 .flatMap(notificationObservable -> notificationObservable)
                 .map(bytes -> bytes);
     }
 
-    public abstract Observable<Data> listen(RxBleConnection rxBleConnection);
+    public abstract Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection);
 
     protected double[] getRaw(byte[] bytes) {
         double[] sample = new double[bytes.length];

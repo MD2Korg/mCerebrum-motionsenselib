@@ -31,9 +31,11 @@ import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 import org.md2k.motionsenselib.device.v2.CharacteristicsV2;
+import org.md2k.motionsenselib.log.MyLog;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -42,28 +44,30 @@ import io.reactivex.functions.Function;
 class CharacteristicPPGFilteredDcOldV2 extends CharacteristicsV2 {
     private static final UUID CHARACTERISTICS = UUID.fromString("DA39C926-1D81-48E2-9C68-D0AE4BBD351F");
 
-    private double frequency;
-
-    CharacteristicPPGFilteredDcOldV2(double frequency) {
-        this.frequency = frequency;
+    CharacteristicPPGFilteredDcOldV2(double frequency, boolean correctTimestamp) {
+        super(frequency, correctTimestamp);
     }
 
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         final int[] lastSequenceNumber = {-1};
         final long[] lastCorrectedTimestamp = {-1};
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                .flatMap((Function<byte[], Observable<Data>>) bytes -> {
+                .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
                     long curTime = System.currentTimeMillis();
-                    Data[] data = new Data[3];
-                    int sequenceNumber = getSequenceNumber(bytes);
-                    long correctedTimestamp = correctTimeStamp(sequenceNumber, lastSequenceNumber[0], curTime, lastCorrectedTimestamp[0]);
-                    data[0] = new Data(SensorType.PPG_DC, correctedTimestamp, getFilteredPPG(bytes));
-                    data[1] = new Data(SensorType.PPG_DC_RAW, curTime, getRaw(bytes));
-                    data[2] = new Data(SensorType.PPG_DC_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
-                    lastCorrectedTimestamp[0] = correctedTimestamp;
-                    lastSequenceNumber[0] = sequenceNumber;
-                    return Observable.fromArray(data);
+                    ArrayList<Data> data = new ArrayList<>();
+                    try {
+                        int sequenceNumber = getSequenceNumber(bytes);
+                        long correctedTimestamp = correctTimeStamp(sequenceNumber, lastSequenceNumber[0], curTime, lastCorrectedTimestamp[0]);
+                        data.add(new Data(SensorType.PPG_DC, correctedTimestamp, getFilteredPPG(bytes)));
+                        data.add(new Data(SensorType.PPG_DC_RAW, curTime, getRaw(bytes)));
+                        data.add(new Data(SensorType.PPG_DC_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber}));
+                        lastCorrectedTimestamp[0] = correctedTimestamp;
+                        lastSequenceNumber[0] = sequenceNumber;
+                    } catch (Exception e) {
+                        MyLog.error(this.getClass().getName(), "listen()", "packet exception: " + e.getMessage());
+                    }
+                    return Observable.just(data);
                 });
     }
 
@@ -90,7 +94,7 @@ class CharacteristicPPGFilteredDcOldV2 extends CharacteristicsV2 {
      * counter is also in little-endian form
      */
     private static double convertFilteredPPGValues(byte floatCast3, byte floatCast2, byte floatCast1, byte floatCast0) {
-        byte[] bytes=new byte[]{floatCast0, floatCast1, floatCast2, floatCast3};
+        byte[] bytes = new byte[]{floatCast0, floatCast1, floatCast2, floatCast3};
         return ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).getFloat();
     }
 

@@ -33,7 +33,9 @@ import org.md2k.motionsenselib.device.Characteristics;
 import org.md2k.motionsenselib.device.Data;
 import org.md2k.motionsenselib.device.SensorType;
 import org.md2k.motionsenselib.device.v2.CharacteristicsV2;
+import org.md2k.motionsenselib.log.MyLog;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import io.reactivex.Observable;
@@ -41,27 +43,30 @@ import io.reactivex.functions.Function;
 
 class CharacteristicPpgNewV2 extends CharacteristicsV2 {
     private static final UUID CHARACTERISTICS = UUID.fromString("DA39C925-1D81-48E2-9C68-D0AE4BBD351F");
-    private double frequency;
-    CharacteristicPpgNewV2(double frequency) {
-        this.frequency = frequency;
+    CharacteristicPpgNewV2(double frequency, boolean correctTimestamp) {
+        super(frequency, correctTimestamp);
     }
 
     @Override
-    public Observable<Data> listen(RxBleConnection rxBleConnection) {
+    public Observable<ArrayList<Data>> listen(RxBleConnection rxBleConnection) {
         final int[] lastSequenceNumber = {-1};
         final long[] lastCorrectedTimestamp = {-1};
         return getCharacteristicListener(rxBleConnection, CHARACTERISTICS)
-                .flatMap((Function<byte[], Observable<Data>>) bytes -> {
+                .flatMap((Function<byte[], Observable<ArrayList<Data>>>) bytes -> {
                     long curTime = System.currentTimeMillis();
-                    Data[] data = new Data[3];
+                    ArrayList<Data> data = new ArrayList<>();
+                    try{
                     int sequenceNumber = getSequenceNumber(bytes);
                     long correctedTimestamp = correctTimeStamp(sequenceNumber, lastSequenceNumber[0], curTime, lastCorrectedTimestamp[0]);
-                    data[0] = new Data(SensorType.PPG, correctedTimestamp, getPPG(bytes));
-                    data[1] = new Data(SensorType.PPG_RAW, curTime, getRaw(bytes));
-                    data[2] = new Data(SensorType.PPG_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber});
+                    data.add(new Data(SensorType.PPG, correctedTimestamp, getPPG(bytes)));
+                    data.add(new Data(SensorType.PPG_RAW, curTime, getRaw(bytes)));
+                    data.add(new Data(SensorType.PPG_SEQUENCE_NUMBER, correctedTimestamp, new double[]{sequenceNumber}));
                     lastCorrectedTimestamp[0] = correctedTimestamp;
                     lastSequenceNumber[0] = sequenceNumber;
-                    return Observable.fromArray(data);
+                    } catch (Exception e) {
+                        MyLog.error(this.getClass().getName(), "listen()", "packet exception: " + e.getMessage());
+                    }
+                    return Observable.just(data);
                 });
     }
 
