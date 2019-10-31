@@ -66,6 +66,8 @@ public class MotionSenseHrvPlusGen2IR extends MotionSenseHrvPlusGen2 {
                 sensorInfoArrayList.put(SensorType.PPG_SEQUENCE_NUMBER, createPPGSequenceNumberInfo(65535));
             }
         }
+        if (deviceSettings.isPpgDataQualityEnable())
+            sensorInfoArrayList.put(SensorType.PPG_DATA_QUALITY, createPPGDataQualityInfo());
         return sensorInfoArrayList;
     }
 
