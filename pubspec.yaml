@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_blue: ^0.6.0+4
+  flutter_blue: 0.6.2
   flutter_bloc: ^0.15.1
   android_intent: ^0.3.3
   location_permissions: ^2.0.0

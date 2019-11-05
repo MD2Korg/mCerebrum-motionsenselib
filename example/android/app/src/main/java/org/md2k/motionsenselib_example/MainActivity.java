@@ -74,7 +74,7 @@ public class MainActivity extends FlutterActivity {
                         } catch (Exception e) {
                             Log.e("abc","file read error");
                         }
-                        Log.d("abc","readsettings ended");
+                        Log.d("abc","readsettings ended ... data = "+myData.toString());
                         result.success(myData.toString());
                         break;
                     case "SAVE_SETTINGS":

@@ -9,7 +9,6 @@ import 'package:motionsenselib/settings/motionsense_settings.dart';
 
 class BluetoothManager {
   bool _scanning=false;
-  FlutterBlue _flutterBlue = FlutterBlue.instance;
   StreamSubscription _scanSubscription;
   List<Device> scanList = new List();
   MotionSenseSettings settings;
@@ -17,15 +16,15 @@ class BluetoothManager {
   BluetoothManager(this.settings);
 
   Stream<BluetoothState> getBluetoothState() {
-    return _flutterBlue.state;
+    return FlutterBlue.instance.state;
   }
 
   Future<bool> isBluetoothOn() async {
-    return await _flutterBlue.isOn;
+    return await FlutterBlue.instance.isOn;
   }
 
   Future<bool> isAvailable() {
-    return _flutterBlue.isAvailable;
+    return FlutterBlue.instance.isAvailable;
   }
   bool isScanning(){
     return _scanning;
@@ -44,7 +43,7 @@ class BluetoothManager {
 
     _scanning=true;
     Guid g = new Guid("0000180f-0000-1000-8000-00805f9b34fb");
-    _scanSubscription = _flutterBlue.scan(withServices: [g]).listen((scanResult) {
+    _scanSubscription = FlutterBlue.instance.scan(withServices: [g]).listen((scanResult) {
       for(int i=0;i<scanList.length;i++){
         if(scanList[i].bluetoothDevice.id.toString().toLowerCase()==scanResult.device.id.toString().toLowerCase())
           return;
@@ -59,7 +58,7 @@ class BluetoothManager {
   }
 
   Future<void> stopScan() async{
-    await _flutterBlue.stopScan();
+    await FlutterBlue.instance.stopScan();
     if(_scanSubscription!=null) {
       await _scanSubscription.cancel();
       _scanSubscription=null;
